@@ -1,0 +1,50 @@
+import { AnimatedName } from '../animated-name.tsx';
+
+export const metadata = {
+  title: 'How Does This Not Exist?',
+  description: 'REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.',
+  alternates: {
+    canonical: '/n/how-does-this-not-exist',
+  },
+};
+
+<AnimatedName date="October 2025" />
+
+# How Does This Not Exist?
+
+Six APIs. Eight packages. Zero documentation on most of them.
+
+That was the situation at Hiro — a developer platform with multiple products, each with its own SDK, each with different maintainers, each with documentation that ranged from "outdated" to "nonexistent."
+
+REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.
+
+## The search
+
+The obvious first stop: [TypeDoc](https://typedoc.org/). It generates documentation from TypeScript — HTML by default, JSON with `--json`. The problem? The JSON output isn't a _spec_, it's a document tree. Type references don't resolve. Destructured parameters lose structure. Complex generics flatten into strings.
+
+Want to answer "what changed between v1 and v2"? Want to feed your API surface to an LLM? The output fights you.
+
+Next: [API Extractor](https://api-extractor.com/) from Microsoft. Closer — it generates `.api.json` reports. But it's designed for monorepo rollup summaries, not standalone package specs. The format is Microsoft-specific. And it requires full build pipeline integration just to run.
+
+Neither tool answers the simple question: "What is the public API surface of this package, in a format machines can consume?"
+
+## The gap
+
+OpenAPI solved this for REST. A JSON/YAML spec describing every endpoint, parameter, and response type. Tooling emerged around it — documentation generators, SDK builders, diff tools, linters.
+
+TypeScript has nothing equivalent. No standard for "here's every export, its signature, its types, its JSDoc."
+
+How does this not exist?
+
+A package spec should:
+
+1. List every public export
+2. Capture full type information — not compiler-optimized declarations
+3. Output structured JSON
+4. Work standalone — no build pipeline required
+
+At Hiro, this would've meant: one command across eight packages, one source of truth, a way to know when docs fell behind.
+
+The tooling gap exists because most people maintain one package. Six APIs and eight packages surface problems that one never will.
+
+So — time to build it.

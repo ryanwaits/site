@@ -1,0 +1,532 @@
+@import 'tailwindcss';
+@source "../node_modules/streamdown/dist/*.js";
+
+@theme {
+  --font-family-sans: var(--font-inter), 'Inter', sans-serif;
+  --font-family-serif: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  --font-family-mono: var(--font-mono), 'JetBrains Mono', monospace;
+}
+
+:root {
+  /* Departure Mono inspired palette - Light mode */
+  --color-bg: #D8D8D8;
+  --color-text: #4A4A4A;
+  --color-muted: #6B6B6B;
+  --color-accent: #4A4A4A;
+  --color-border: rgba(74, 74, 74, 0.2);
+
+  /* Contribution graph - gray scale for light mode */
+  --contrib-0: #C8C8C8;
+  --contrib-1: #A0A0A0;
+  --contrib-2: #787878;
+  --contrib-3: #505050;
+  --contrib-4: #2A2A2A;
+
+  /* Syntax highlighting - keep Tokyo Night style */
+  --sh-class: #7aa2f7;
+  --sh-sign: #89ddff;
+  --sh-string: #9ece6a;
+  --sh-keyword: #bb9af7;
+  --sh-comment: #565f89;
+  --sh-jsxliterals: #7aa2f7;
+  --sh-property: #73daca;
+  --sh-entity: #e0af68;
+}
+
+/* Dark mode overrides - supports both system preference AND .dark class */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-bg: #131010;
+    --color-text: #F2EDED;
+    --color-muted: #B8B2B2;
+    --color-accent: #F2EDED;
+    --color-border: #3D3838;
+
+    /* Contribution graph - warm gray scale for dark mode */
+    --contrib-0: #1E1B1B;
+    --contrib-1: #3D3838;
+    --contrib-2: #5C5656;
+    --contrib-3: #8A8282;
+    --contrib-4: #F2EDED;
+  }
+}
+
+/* Manual dark mode via .dark class */
+:root.dark {
+  --color-bg: #131010;
+  --color-text: #F2EDED;
+  --color-muted: #B8B2B2;
+  --color-accent: #F2EDED;
+  --color-border: #3D3838;
+
+  /* Contribution graph - warm gray scale for dark mode */
+  --contrib-0: #1E1B1B;
+  --contrib-1: #3D3838;
+  --contrib-2: #5C5656;
+  --contrib-3: #8A8282;
+  --contrib-4: #F2EDED;
+}
+
+/* Manual light mode via .light class (overrides system dark) */
+:root.light {
+  --color-bg: #D8D8D8;
+  --color-text: #4A4A4A;
+  --color-muted: #6B6B6B;
+  --color-accent: #4A4A4A;
+  --color-border: rgba(74, 74, 74, 0.2);
+}
+
+html {
+  min-width: 360px;
+  scrollbar-gutter: stable;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+/* Large serif headlines - amp style */
+h1 {
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.03em;
+  font-weight: 400;
+}
+
+/* Date/meta text - uppercase mono */
+time,
+.meta {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+pre {
+  background-color: #16161e;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  line-height: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  pre {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+pre::-webkit-scrollbar {
+  display: none;
+}
+
+pre {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+code {
+  font-family: var(--font-family-mono);
+  font-size: 14px;
+  padding: 0.2em 0.4em;
+  border-radius: 0.3em;
+  background-color: var(--color-border);
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+  border: none;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+pre code > span .sh__token--identifier {
+  color: white !important;
+}
+
+code:not(pre code) span {
+  font-weight: 500;
+  color: var(--color-text) !important;
+}
+
+pre code span {
+  font-weight: 500;
+}
+
+hr {
+  border-color: var(--color-border);
+}
+
+/* Remove Safari input shadow on mobile */
+input[type='text'],
+input[type='email'] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+table {
+  display: block;
+  max-width: fit-content;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Links - amp style with underline */
+a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.transition-element {
+  view-transition-name: lee;
+}
+
+::view-transition-old(lee) {
+  animation: fade-out 0.2s ease-out;
+}
+
+::view-transition-new(lee) {
+  animation: fade-in 0.3s ease-in;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@supports (view-transition-name: none) {
+  .fade-in {
+    animation: fade-in 0.8s ease-in-out forwards;
+    opacity: 0;
+  }
+}
+
+/* Console markdown styles - Minimal Brutalist */
+.console-markdown {
+  font-size: 12px;
+  line-height: 1.6;
+  font-family: var(--font-family-mono);
+}
+
+/* Hide Streamdown's GUI controls */
+.console-markdown [data-streamdown-controls],
+.console-markdown [class*="controls"],
+.console-markdown button[aria-label*="copy"],
+.console-markdown button[aria-label*="download"],
+.console-markdown button[aria-label*="Copy"],
+.console-markdown button[aria-label*="Download"],
+.console-markdown > div > div:has(button) {
+  display: none !important;
+}
+
+/* Headers with ## prefix style */
+.console-markdown h1,
+.console-markdown h2,
+.console-markdown h3 {
+  font-family: var(--font-family-mono);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 1.25em 0 0.5em;
+}
+
+.console-markdown h1 { font-size: 13px; color: #fff; }
+.console-markdown h2 { font-size: 12px; color: #ccc; }
+.console-markdown h3 { font-size: 11px; color: #999; }
+
+.console-markdown h1::before { content: "# "; color: #5a9848; opacity: 0.6; }
+.console-markdown h2::before { content: "## "; color: #5a9848; opacity: 0.6; }
+.console-markdown h3::before { content: "### "; color: #5a9848; opacity: 0.6; }
+
+/* Paragraphs */
+.console-markdown p {
+  margin-bottom: 0.75em;
+  color: #e8e4d9;
+}
+
+/* Strong = bright, em = accent */
+.console-markdown strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.console-markdown em {
+  color: #c9a85c;
+  font-style: normal;
+}
+
+/* Inline code */
+.console-markdown code {
+  color: #5a9848;
+  background: none;
+  padding: 0;
+  font-size: 11px;
+}
+
+/* Code blocks - barely there */
+.console-markdown pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75em 1em;
+  margin: 0.75em 0;
+  border-radius: 2px;
+  border-left: 2px solid #333;
+  overflow-x: auto;
+}
+
+.console-markdown pre code {
+  color: #e8e4d9;
+  font-size: 11px;
+}
+
+/* Lists - minimal */
+.console-markdown ul,
+.console-markdown ol {
+  margin: 0.5em 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.console-markdown li {
+  margin: 0.3em 0;
+  color: #bbb;
+  padding-left: 1.25em;
+  position: relative;
+}
+
+.console-markdown ul li::before {
+  content: "-";
+  position: absolute;
+  left: 0;
+  color: #5a9848;
+}
+
+.console-markdown ol {
+  counter-reset: item;
+}
+
+.console-markdown ol li::before {
+  counter-increment: item;
+  content: counter(item) ".";
+  position: absolute;
+  left: 0;
+  color: #5a9848;
+}
+
+/* Links */
+.console-markdown a {
+  color: #5a9848;
+  text-decoration: none;
+  border-bottom: 1px dashed #3d5a32;
+}
+
+.console-markdown a:hover {
+  color: #7dd89a;
+}
+
+/* Tables - aggressively override Streamdown's defaults */
+.console-markdown .table-wrapper,
+.console-markdown [class*="bg-muted"],
+.console-markdown [class*="rounded"],
+.console-markdown [class*="border-"],
+.console-markdown [class*="overflow"],
+.console-markdown .my-4,
+.console-markdown > div {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.console-markdown .table-wrapper {
+  margin: 0.75em 0;
+  overflow-x: auto;
+}
+
+.console-markdown table,
+.console-markdown .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  background: none !important;
+  border: none !important;
+}
+
+.console-markdown .table-header {
+  border-bottom: 1px solid #444;
+}
+
+.console-markdown th,
+.console-markdown .table-header-cell {
+  text-align: left;
+  color: #666 !important;
+  font-weight: normal !important;
+  font-size: 10px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 1.5em 0.5em 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+.console-markdown .table-body {
+  background: none !important;
+}
+
+.console-markdown .table-row {
+  border: none !important;
+  background: none !important;
+  border-bottom: 1px solid #252525 !important;
+}
+
+.console-markdown td,
+.console-markdown .table-cell {
+  padding: 0.5em 1.5em 0.5em 0 !important;
+  color: #e8e4d9 !important;
+  border: none !important;
+  background: none !important;
+  vertical-align: top;
+}
+
+.console-markdown tr {
+  border: none !important;
+  background: none !important;
+}
+
+.console-markdown thead tr,
+.console-markdown .table-header {
+  border-bottom: 1px solid #444 !important;
+}
+
+/* Blockquotes */
+.console-markdown blockquote {
+  border-left: 2px solid #444;
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: #888;
+}
+
+.console-markdown blockquote p {
+  color: #888;
+}
+
+/* Horizontal rules */
+.console-markdown hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 1.25em 0;
+}
+
+/* Task lists */
+.console-markdown input[type="checkbox"] {
+  appearance: none;
+  width: 1em;
+  height: 1em;
+  border: 1px solid #444;
+  border-radius: 2px;
+  margin-right: 0.5em;
+  vertical-align: middle;
+  position: relative;
+}
+
+.console-markdown input[type="checkbox"]:checked {
+  background: #5a9848;
+  border-color: #5a9848;
+}
+
+.console-markdown input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  color: #000;
+  font-size: 10px;
+  top: -1px;
+  left: 1px;
+}
+
+/* Console light theme markdown (inherits from CSS variables) */
+.console-markdown-light {
+  color: var(--color-text);
+}
+
+.console-table {
+  background: none;
+  border: none;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11px;
+  margin: 0.75em 0;
+}
+
+.console-thead {
+  border-bottom: 1px solid var(--color-muted);
+}
+
+.console-tr {
+  background: none;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.console-th {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-weight: normal;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 1.5em 0.5em 0;
+  text-align: left;
+}
+
+.console-td {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  padding: 0.5em 1.5em 0.5em 0;
+  vertical-align: top;
+}
+
+.console-pre {
+  background: var(--color-border);
+  padding: 0.75em 1em;
+  margin: 0.75em 0;
+  border-radius: 2px;
+  border-left: 2px solid var(--color-muted);
+  overflow: auto;
+}
+
+.console-code {
+  color: var(--color-accent);
+  background: none;
+  font-size: 11px;
+}

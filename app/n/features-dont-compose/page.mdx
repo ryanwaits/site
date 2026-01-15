@@ -1,0 +1,58 @@
+import { AnimatedName } from '../animated-name.tsx';
+
+export const metadata = {
+  title: "Features Don't Compose",
+  description: "The agent doesn't need your features — it needs your surfaces.",
+  alternates: {
+    canonical: '/n/features-dont-compose',
+  },
+};
+
+<AnimatedName date="December 2025" />
+
+# Features Don't Compose
+
+openpkg started with compound commands: `coverage`, `audit`, `report`. Feature-rich. Helpful defaults. The kind of CLI developers expect.
+
+Then the refactor.
+
+Those compound commands were just compositions of simpler operations. `coverage` was really `list` + `get` + compare to docs. `audit` was `snapshot` + `diff`. Every "feature" decomposed into the same five primitives.
+
+So we deleted the features. Kept the primitives:
+
+```bash
+openpkg list ./src/index.ts          # list exports
+openpkg get ./src/index.ts foo       # single export details
+openpkg snapshot ./src/index.ts      # full spec JSON
+openpkg diff old.json new.json       # compare specs
+openpkg docs spec.json               # generate markdown
+```
+
+Five commands. Everything else is composition.
+
+## The pressure to add
+
+Once you have primitives, the pressure starts:
+
+- "Add an MCP server so agents can call these"
+- "Build a CLI wrapper for common workflows"
+- "Add a `--watch` mode"
+- "Integrate with GitHub Actions directly"
+
+All reasonable requests. All rejected.
+
+## Why not
+
+Primitives compose. Features don't.
+
+An MCP server is a feature. It encodes assumptions about how agents should interact. A CLI wrapper encodes assumptions about workflows. Both add surface area to maintain. Both constrain how others can build on top.
+
+The agent doesn't need your features — it needs your _surfaces_. Give it `list`, `get`, `diff`. Let it compose them however the task requires. Today's workflow might be "check if docs match code." Tomorrow's might be "generate changelog from last release." Same primitives, different composition.
+
+Features age. Primitives don't.
+
+## The test
+
+When someone asks for a new feature, ask: is this a new primitive, or a composition of existing ones?
+
+If it's a composition, write a prompt instead of code. Teach the agent the recipe. Ship nothing.

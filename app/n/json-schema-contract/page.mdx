@@ -1,0 +1,68 @@
+import { AnimatedName } from '../animated-name.tsx';
+
+export const metadata = {
+  title: 'Pick a Standard, Extend Carefully',
+  description: 'Custom formats are a trap. Standards are leverage.',
+  alternates: {
+    canonical: '/n/json-schema-contract',
+  },
+};
+
+<AnimatedName date="December 2025" />
+
+# Pick a Standard, Extend Carefully
+
+Every tool that generates structured output faces the same question: invent a format or adopt a standard?
+
+Custom formats are tempting. Full control. No constraints. But every downstream tool needs a custom parser. Every integration is bespoke. The ecosystem never forms.
+
+For openpkg — a TypeScript API extraction tool — the output format decision would determine whether other tools could build on top of it.
+
+## The options
+
+**Option 1: Custom JSON structure.** Define whatever fields make sense. Maximum flexibility. But now every consumer needs to understand _this specific format_. No existing tooling applies.
+
+**Option 2: TypeDoc's format.** Already exists, already documented. But it's a document tree, not a specification. Designed for rendering, not programmatic consumption. Type references don't resolve.
+
+**Option 3: JSON Schema.** Universal standard. Validators exist in every language. Editors provide autocomplete. The structure is self-documenting.
+
+## The decision
+
+openpkg outputs JSON Schema — with extensions.
+
+The base structure follows the spec. Types become `$ref` references. Objects have `properties`. Arrays have `items`. Any tool that understands JSON Schema can parse the output.
+
+But TypeScript has concepts JSON Schema doesn't — generics, union types, intersection types. These go in `x-ts-type` extension fields:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "config": {
+      "$ref": "#/definitions/Config",
+      "x-ts-type": "Partial<Config>"
+    }
+  }
+}
+```
+
+Standard tools ignore `x-ts-type`. TypeScript-aware tools use it for richer output. Both work.
+
+## What this unlocks
+
+With a standard format, integration becomes trivial:
+
+- **Badge generators** can read coverage from the spec without custom parsing
+- **Doc adapters** (Fumadocs, Mintlify) can consume exports directly
+- **Diff tools** can compare specs structurally
+- **LLMs** already understand JSON Schema — no special prompting needed
+
+The fumadocs adapter took an afternoon. A custom format would've taken days.
+
+## The principle
+
+Pick a standard. Extend it with `x-` prefixed fields when you need domain-specific info. Never break compatibility with tools that don't understand your extensions.
+
+This isn't a new idea — OpenAPI does exactly this. HTTP headers do this. The pattern works because it respects the ecosystem while solving the specific problem.
+
+Custom formats are a trap. Standards are leverage.
