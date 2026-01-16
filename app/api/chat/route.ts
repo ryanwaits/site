@@ -1,5 +1,7 @@
 import { query, HookCallback, PreToolUseHookInput } from '@anthropic-ai/claude-agent-sdk'
 import path from 'path'
+import fs from 'fs/promises'
+import { posts } from '@/app/n/posts'
 
 // Security hook: restrict file reads to project directory only
 const restrictFileAccess: HookCallback = async (input) => {
@@ -42,17 +44,29 @@ const restrictFileAccess: HookCallback = async (input) => {
   return {}
 }
 
+// Read post content by slug
+async function getPostContent(slug: string): Promise<string | null> {
+  const post = posts.find(p => p.slug === slug)
+  if (!post) return null
+
+  try {
+    const filePath = path.join(process.cwd(), 'app', 'n', slug, 'page.mdx')
+    const content = await fs.readFile(filePath, 'utf-8')
+    return content
+  } catch {
+    return null
+  }
+}
+
 const SYSTEM_PROMPT = `You are an AI assistant embedded in Ryan Waits' personal website console. This is a terminal-style interface - respond accordingly.
 
 ## About Ryan
 - Product engineer building developer tools
-- Previously at Hiro (Bitcoin dev tools), VP of Product at Vercel (Next.js)
+- Previously at Hiro building Bitcoin developer tools
 - Writes about DX, DevRel, Rust tooling, product engineering, AI
 
 ## Work History
-- **Vercel** (2020-present): VP of Product. Grew Next.js to 1M+ developers. Built DevRel team.
-- **Hy-Vee** (2018-2020): Senior Engineer. Rebuilt e-commerce with React/Next.js, GraphQL, K8s.
-- **Workiva** (2015-2018): Engineer. First production React. Built monitoring tools.
+- **Hiro** (2020-2024): Building Bitcoin developer tools. Stacks blockchain infrastructure.
 
 ## Open Source Projects
 - openpkg - TypeScript API extraction
@@ -94,7 +108,23 @@ Actions: theme, matrix, confetti
 `
 
 export async function POST(request: Request) {
-  const { message, history = [] } = await request.json()
+  const { message, history = [], mentions = [] } = await request.json()
+
+  // Load content for any @mentions
+  let mentionContext = ''
+  if (mentions.length > 0) {
+    const mentionContents = await Promise.all(
+      mentions.map(async (slug: string) => {
+        const content = await getPostContent(slug)
+        const post = posts.find(p => p.slug === slug)
+        if (content && post) {
+          return `\n\n---\n## Referenced: "${post.title}" (@${slug})\n\n${content}\n---`
+        }
+        return null
+      })
+    )
+    mentionContext = mentionContents.filter(Boolean).join('')
+  }
 
   // Build prompt with conversation history for context
   let fullPrompt = message
@@ -104,6 +134,11 @@ export async function POST(request: Request) {
       .map((m: { role: string; content: string }) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
       .join('\n\n')
     fullPrompt = `Previous conversation:\n${historyText}\n\nCurrent request: ${message}`
+  }
+
+  // Append mention context if any
+  if (mentionContext) {
+    fullPrompt += `\n\nThe user has referenced the following writing(s) for context:${mentionContext}`
   }
 
   const encoder = new TextEncoder()

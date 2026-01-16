@@ -1,233 +1,161 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { SelectionToolbar } from './components/selection-toolbar'
+import { MarkdownRaw } from './components/markdown-raw'
+import { SiteNav } from './components/site-nav'
+import { SiteFooter } from './components/site-footer'
 
-type Section = 'jobs' | 'projects' | 'writing' | 'playground'
+// Raw markdown content using actual markdown syntax
+const MARKDOWN_CONTENT = `# FIELD REPORT RW-2025-001
 
-const NAV_ITEMS: { key: string; label: string; section: Section }[] = [
-  { key: 'J', label: 'Jobs', section: 'jobs' },
-  { key: 'P', label: 'Projects', section: 'projects' },
-  { key: 'W', label: 'Writing', section: 'writing' },
-  { key: 'G', label: 'Playground', section: 'playground' },
-]
+SUBJECT: Ryan Waits — Product Engineer
+LOCATION: Austin, TX
+DATE: January 2025
+STATUS: Building AI-native developer tooling
 
-const JOBS = [
-  { title: 'Product Engineer', company: 'Hiro', period: '2021 — 2024', description: 'Developer tools for Bitcoin' },
-  { title: 'Senior Engineer', company: 'Blockstack', period: '2019 — 2021', description: 'Decentralized apps platform' },
-  { title: 'Software Engineer', company: 'Startup Co', period: '2017 — 2019', description: 'Early stage fintech' },
-]
+---
 
-const PROJECTS = [
-  { name: 'openpkg', description: 'TypeScript API extraction for packages', url: 'https://github.com/ryanwaits/openpkg' },
-  { name: 'doccov', description: 'Documentation coverage analysis', url: 'https://github.com/ryanwaits/doccov' },
-  { name: 'chainhooks-mcp', description: 'MCP server for Chainhook integration', url: 'https://github.com/ryanwaits/chainhooks-mcp' },
-]
+## Mission Overview
 
-const WRITING = [
-  { title: 'From 2000 Lines to 100', date: 'December 2025', description: 'Deleted 95% of the codebase. The tool got better.', slug: '/n/2000-to-100' },
-  { title: "Features Don't Compose", date: 'December 2025', description: "The agent doesn't need your features — it needs your surfaces.", slug: '/n/features-dont-compose' },
-  { title: 'New Standard, Who Dis?', date: 'December 2025', description: 'Standard Schema shipped. Runtime extraction just got universal.', slug: '/n/new-standard-who-dis' },
-  { title: 'Pick a Standard, Extend Carefully', date: 'December 2025', description: 'Custom formats are a trap. Standards are leverage.', slug: '/n/json-schema-contract' },
-  { title: 'Codecov, But for Docs', date: 'October 2025', description: 'Code coverage has tooling. Documentation coverage? Nothing.', slug: '/n/codecov-but-for-docs' },
-  { title: 'How Does This Not Exist?', date: 'October 2025', description: 'REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.', slug: '/n/how-does-this-not-exist' },
-]
+Product engineer specializing in developer tools and AI-native workflows.
+Currently focused on the intersection of **documentation** and **machine readability**.
+Previously at Hiro building Bitcoin developer infrastructure (2021-2024).
 
-const PLAYGROUND = [
-  { name: 'API Playground', description: 'Interactive API explorer', status: 'coming soon' },
-  { name: 'Component Lab', description: 'UI component experiments', status: 'coming soon' },
-  { name: 'Prompt Tester', description: 'LLM prompt iteration tool', status: 'coming soon' },
-]
+Core belief: The best developer tools disappear. They don't add features — they
+remove friction. The agent doesn't need your help. It needs your surfaces.
+
+---
+
+## Current Focus
+
+### Primary Objective
+
+Building tools that make codebases machine-readable. Documentation coverage,
+API extraction, type-safe interfaces. The boring infrastructure that makes
+AI-native development possible.
+
+### Active Projects
+
+| Codename        | Status | Description                                    |
+|-----------------|--------|------------------------------------------------|
+| doccov          | MVP    | Documentation coverage analysis                |
+|                 |        | Codecov for docs. Measures how well your       |
+|                 |        | public APIs are documented.                    |
+| openpkg         | Stable | TypeScript API extraction                      |
+|                 |        | Extracts public API surface from any           |
+|                 |        | TypeScript package. Zero config.               |
+| secondlayer-cli | Stable | Clarity contract interfaces                    |
+|                 |        | Generate TypeScript types from Bitcoin         |
+|                 |        | smart contracts.                               |
+| chainhooks-mcp  | Active | MCP server for Chainhook integration           |
+|                 |        | Connect AI agents to Bitcoin event streams.    |
+
+---
+
+## Employment History
+
+### Hiro Systems (2021 — 2024)
+
+**Product Engineer** — Developer Tools
+
+Built and maintained developer tooling for Bitcoin ecosystem:
+
+- Clarinet: Local development environment for Clarity smart contracts
+- Chainhooks: Event streaming infrastructure for Bitcoin/Stacks
+- Documentation platform serving 50k+ monthly developers
+
+### Blockstack PBC (2019 — 2021)
+
+**Senior Engineer** — Platform
+
+Decentralized application platform. Authentication, storage, identity.
+Early Bitcoin L2 infrastructure.
+
+### Various Startups (2017 — 2019)
+
+**Software Engineer**
+
+Early-stage fintech. Payments, lending, compliance automation.
+
+---
+
+## Recent Transmissions
+
+### December 2025
+
+- **From 2000 Lines to 100** — Deleted 95% of the codebase. The tool got
+  better. Sometimes the best feature is the one you remove.
+
+- **Features Don't Compose** — The agent doesn't need your features — it
+  needs your surfaces. Stop building for humans who read docs. Build for
+  machines that parse APIs.
+
+- **New Standard, Who Dis?** — Standard Schema shipped. Runtime extraction
+  just got universal. One schema format to rule them all.
+
+- **Pick a Standard, Extend Carefully** — Custom formats are a trap.
+  Standards are leverage. Every proprietary format is technical debt.
+
+### October 2025
+
+- **Codecov, But for Docs** — Code coverage has tooling. Documentation
+  coverage? Nothing. Until now.
+
+- **How Does This Not Exist?** — REST APIs have OpenAPI. GraphQL has
+  introspection. TypeScript packages have... nothing.
+
+---
+
+## Operating Principles
+
+1. **Simplicity over flexibility** — Every option is a decision someone
+   has to make. Most decisions don't need to be made.
+
+2. **Standards over custom** — Proprietary formats are debt. Standards
+   are leverage. Pick the boring choice.
+
+3. **Surfaces over features** — The best API is the one that doesn't
+   need documentation. Make the right thing obvious.
+
+4. **Delete over add** — The feature you remove is the feature that
+   can't break. Subtraction is underrated.
+
+---
+
+## Contact
+
+| Channel  | Handle                                      |
+|----------|---------------------------------------------|
+| X        | [@ryan_waits](https://x.com/ryan_waits)     |
+| GitHub   | [ryanwaits](https://github.com/ryanwaits)   |
+| Location | Austin, TX                                  |
+| Agent    | Press \`[A]\` to open communications channel  |
+
+---
+
+## Classification
+
+This document is **UNCLASSIFIED**. Distribution unlimited.
+Select any text to explain or discuss with the agent.
+
+---
+
+*END REPORT*`
 
 export default function HomePage() {
-  const [activeSection, setActiveSection] = useState<Section>('writing')
-
   return (
-    <div className="h-screen flex flex-col bg-[var(--color-bg)] overflow-hidden">
-      {/* Top Navigation */}
-      <nav className="flex-shrink-0 bg-[var(--color-bg)] border-b border-[var(--color-border)]">
-        <div className="flex items-center justify-between px-6 py-3">
-          {/* Left: Logo + Nav Items */}
-          <div className="flex items-center gap-1">
-            <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-text)] mr-4">
-              RW
-            </span>
-
-            <span className="text-[var(--color-muted)] mr-3">//</span>
-
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.section}
-                onClick={() => setActiveSection(item.section)}
-                className={`
-                  font-mono text-xs uppercase tracking-wider px-2 py-1
-                  transition-colors duration-150
-                  ${activeSection === item.section
-                    ? 'text-[var(--color-text)]'
-                    : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
-                  }
-                `}
-              >
-                <span className="opacity-50">[{item.key}]</span>
-                <span className="ml-1">{item.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Right: Agent Button */}
-          <button
-            onClick={() => window.dispatchEvent(new Event('toggle-agent'))}
-            className="font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-text)] text-[var(--color-text)] hover:bg-[var(--color-text)] hover:text-[var(--color-bg)] transition-colors duration-150"
-          >
-            <span className="opacity-50">[A]</span>
-            <span className="ml-1">Agent</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-hidden px-6 py-8">
-        <div className="h-full flex flex-col max-w-xl">
-          {/* Header */}
-          <header className="flex-shrink-0 mb-6">
-            <h1 className="font-serif text-4xl text-[var(--color-text)] mb-3">
-              Ryan Waits
-            </h1>
-            <p className="text-[var(--color-muted)] leading-relaxed">
-              Product engineer building developer tools. Previously at{' '}
-              <Link href="/work" className="text-[var(--color-text)] underline underline-offset-2">
-                Hiro
-              </Link>
-              , helping developers build on Bitcoin.
-            </p>
-          </header>
-
-          {/* Section Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 mb-4 border-b border-[var(--color-border)] pb-3">
-            <span className="font-mono text-xs text-[var(--color-muted)]">/</span>
-            <h2 className="font-mono text-xs uppercase tracking-wider text-[var(--color-text)]">
-              {activeSection}
-            </h2>
-            <span className="font-mono text-xs text-[var(--color-muted)]">
-              ({activeSection === 'jobs' ? JOBS.length :
-                activeSection === 'projects' ? PROJECTS.length :
-                activeSection === 'writing' ? WRITING.length :
-                PLAYGROUND.length})
-            </span>
-          </div>
-
-          {/* Content Sections - scrollable container */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            {activeSection === 'jobs' && (
-              <section className="space-y-6">
-                {JOBS.map((job, i) => (
-                  <article key={i} className="group">
-                    <div className="flex items-baseline justify-between mb-1">
-                      <h3 className="text-[var(--color-text)] font-medium">
-                        {job.title}
-                      </h3>
-                      <span className="font-mono text-xs text-[var(--color-muted)]">
-                        {job.period}
-                      </span>
-                    </div>
-                    <p className="text-sm text-[var(--color-muted)]">
-                      {job.company} — {job.description}
-                    </p>
-                  </article>
-                ))}
-              </section>
-            )}
-
-            {activeSection === 'projects' && (
-              <section className="space-y-6">
-                {PROJECTS.map((project, i) => (
-                  <article key={i}>
-                    <a
-                      href={project.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group block"
-                    >
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <h3 className="text-[var(--color-text)] font-medium group-hover:underline underline-offset-2">
-                          {project.name}
-                        </h3>
-                        <span className="font-mono text-xs text-[var(--color-muted)]">↗</span>
-                      </div>
-                      <p className="text-sm text-[var(--color-muted)]">
-                        {project.description}
-                      </p>
-                    </a>
-                  </article>
-                ))}
-              </section>
-            )}
-
-            {activeSection === 'writing' && (
-              <section className="space-y-6">
-                {WRITING.map((post, i) => (
-                  <article key={i}>
-                    <Link href={post.slug} className="group block">
-                      <time className="font-mono text-xs uppercase tracking-wider text-[var(--color-muted)] block mb-1">
-                        {post.date}
-                      </time>
-                      <h3 className="font-serif text-xl text-[var(--color-text)] group-hover:underline underline-offset-2 mb-1">
-                        {post.title}
-                      </h3>
-                      <p className="text-[var(--color-muted)]">
-                        {post.description}
-                      </p>
-                    </Link>
-                  </article>
-                ))}
-              </section>
-            )}
-
-            {activeSection === 'playground' && (
-              <section className="space-y-6">
-                {PLAYGROUND.map((item, i) => (
-                  <article key={i} className="opacity-50">
-                    <div className="flex items-baseline gap-3 mb-1">
-                      <h3 className="text-[var(--color-text)] font-medium">
-                        {item.name}
-                      </h3>
-                      <span className="font-mono text-xs text-[var(--color-muted)] border border-[var(--color-border)] px-1.5 py-0.5">
-                        {item.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-[var(--color-muted)]">
-                      {item.description}
-                    </p>
-                  </article>
-                ))}
-              </section>
-            )}
-          </div>
+    <div className="h-screen flex flex-col bg-[var(--color-bg)]">
+      <SelectionToolbar />
+      <SiteNav />
+      <main className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="max-w-3xl ml-[72px]">
+          <MarkdownRaw
+            content={MARKDOWN_CONTENT}
+            className="text-[var(--color-text)]"
+          />
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="flex-shrink-0 px-6 py-4 border-t border-[var(--color-border)]">
-        <div className="flex gap-4 font-mono text-xs text-[var(--color-muted)]">
-          <a
-            href="https://x.com/ryan_waits"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[var(--color-text)] transition-colors"
-          >
-            @ryan_waits
-          </a>
-          <span>·</span>
-          <a
-            href="https://github.com/ryanwaits"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[var(--color-text)] transition-colors"
-          >
-            github
-          </a>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

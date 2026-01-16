@@ -8,22 +8,31 @@
 }
 
 :root {
-  /* Departure Mono inspired palette - Light mode */
-  --color-bg: #D8D8D8;
-  --color-text: #4A4A4A;
-  --color-muted: #6B6B6B;
-  --color-accent: #4A4A4A;
-  --color-border: rgba(74, 74, 74, 0.2);
+  /* Amp palette - Light mode */
+  --color-bg: #DFDFC1;
+  --color-text: #0B0D0B;
+  --color-muted: #595959;
+  --color-accent: #0B0D0B;
+  --color-accent-secondary: #595959;
+  --color-border: rgba(135, 139, 134, 0.12);
+  --color-link: #0B0D0B;
+  --color-nav-active: #1588B2;
+  --console-outer-bg: #F1EEEE;
+  --console-content-bg: #16161e;
+  --console-accent: #F6833B;
+  --console-text: #E8E4D9;
+  --console-muted: #8A8680;
 
-  /* Contribution graph - gray scale for light mode */
-  --contrib-0: #C8C8C8;
-  --contrib-1: #A0A0A0;
-  --contrib-2: #787878;
-  --contrib-3: #505050;
-  --contrib-4: #2A2A2A;
+  /* Contribution graph - warm scale for light mode */
+  --contrib-0: #D4D4B8;
+  --contrib-1: #A8A890;
+  --contrib-2: #6B6B5A;
+  --contrib-3: #3A3A30;
+  --contrib-4: #0B0D0B;
 
-  /* Syntax highlighting - keep Tokyo Night style */
+  /* Syntax highlighting - Tokyo Night style (used by sugar-high) */
   --sh-class: #7aa2f7;
+  --sh-identifier: #c0caf5;
   --sh-sign: #89ddff;
   --sh-string: #9ece6a;
   --sh-keyword: #bb9af7;
@@ -31,49 +40,117 @@
   --sh-jsxliterals: #7aa2f7;
   --sh-property: #73daca;
   --sh-entity: #e0af68;
+
+  /* Markdown syntax highlighting - Amp-inspired light */
+  --md-structure: #9A9B94;        /* hash, hr, pipes, brackets */
+  --md-emphasis: #0B0D0B;         /* bold text */
+  --md-emphasis-marker: #9A9B94;  /* ** and __ markers */
+  --md-code: #5B7A6A;             /* inline code - sage teal */
+  --md-code-marker: #9A9B94;      /* backtick markers */
+  --md-link-text: #5B7A6A;        /* link text - sage teal */
+  --md-link-url: #878B86;         /* link url */
+  --md-list-marker: #5B7A6A;      /* bullet/number - sage teal */
+  --md-italic: #4A4A40;           /* italic text */
 }
 
 /* Dark mode overrides - supports both system preference AND .dark class */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --color-bg: #131010;
-    --color-text: #F2EDED;
-    --color-muted: #B8B2B2;
-    --color-accent: #F2EDED;
-    --color-border: #3D3838;
+    --color-bg: #1A1F1C;
+    --color-text: #E8E4D9;
+    --color-muted: #8A8680;
+    --color-accent: #F6833B;
+    --color-accent-secondary: #8A8680;
+    --color-border: #2A2F2C;
+    --color-link: #E8E4D9;
+    --color-nav-active: #F6833B;
+    --console-outer-bg: #0B0D0B;
+    --console-content-bg: #121714;
+    --console-accent: #F6833B;
+    --console-text: #E8E4D9;
+    --console-muted: #8A8680;
 
-    /* Contribution graph - warm gray scale for dark mode */
-    --contrib-0: #1E1B1B;
-    --contrib-1: #3D3838;
-    --contrib-2: #5C5656;
-    --contrib-3: #8A8282;
-    --contrib-4: #F2EDED;
+    /* Contribution graph - green-tinted for dark mode */
+    --contrib-0: #232824;
+    --contrib-1: #3A403B;
+    --contrib-2: #5A615B;
+    --contrib-3: #8A8D87;
+    --contrib-4: #E8E4D9;
+
+    /* Markdown syntax highlighting - Amp-inspired dark */
+    --md-structure: #5A615B;        /* hash, hr, pipes, brackets */
+    --md-emphasis: #E8E4D9;         /* bold text */
+    --md-emphasis-marker: #5A615B;  /* ** and __ markers */
+    --md-code: #9ECE6A;             /* inline code - bright green */
+    --md-code-marker: #5A615B;      /* backtick markers */
+    --md-link-text: #73DACA;        /* link text - teal */
+    --md-link-url: #8A8680;         /* link url */
+    --md-list-marker: #F6833B;      /* bullet/number - orange accent */
+    --md-italic: #B8B4A8;           /* italic text */
   }
 }
 
 /* Manual dark mode via .dark class */
 :root.dark {
-  --color-bg: #131010;
-  --color-text: #F2EDED;
-  --color-muted: #B8B2B2;
-  --color-accent: #F2EDED;
-  --color-border: #3D3838;
+  --color-bg: #1A1F1C;
+  --color-text: #E8E4D9;
+  --color-muted: #8A8680;
+  --color-accent: #F6833B;
+  --color-accent-secondary: #8A8680;
+  --color-border: #2A2F2C;
+  --color-link: #E8E4D9;
+  --color-nav-active: #F6833B;
+  --console-outer-bg: #0B0D0B;
+  --console-content-bg: #121714;
+  --console-accent: #F6833B;
+  --console-text: #E8E4D9;
+  --console-muted: #8A8680;
 
-  /* Contribution graph - warm gray scale for dark mode */
-  --contrib-0: #1E1B1B;
-  --contrib-1: #3D3838;
-  --contrib-2: #5C5656;
-  --contrib-3: #8A8282;
-  --contrib-4: #F2EDED;
+  /* Contribution graph - green-tinted for dark mode */
+  --contrib-0: #232824;
+  --contrib-1: #3A403B;
+  --contrib-2: #5A615B;
+  --contrib-3: #8A8D87;
+  --contrib-4: #E8E4D9;
+
+  /* Markdown syntax highlighting - Amp-inspired dark */
+  --md-structure: #5A615B;
+  --md-emphasis: #E8E4D9;
+  --md-emphasis-marker: #5A615B;
+  --md-code: #9ECE6A;
+  --md-code-marker: #5A615B;
+  --md-link-text: #73DACA;
+  --md-link-url: #8A8680;
+  --md-list-marker: #F6833B;
+  --md-italic: #B8B4A8;
 }
 
 /* Manual light mode via .light class (overrides system dark) */
 :root.light {
-  --color-bg: #D8D8D8;
-  --color-text: #4A4A4A;
-  --color-muted: #6B6B6B;
-  --color-accent: #4A4A4A;
-  --color-border: rgba(74, 74, 74, 0.2);
+  --color-bg: #DFDFC1;
+  --color-text: #0B0D0B;
+  --color-muted: #595959;
+  --color-accent: #0B0D0B;
+  --color-accent-secondary: #595959;
+  --color-border: rgba(135, 139, 134, 0.12);
+  --color-link: #0B0D0B;
+  --color-nav-active: #1588B2;
+  --console-outer-bg: #F1EEEE;
+  --console-content-bg: #16161e;
+  --console-accent: #F6833B;
+  --console-text: #E8E4D9;
+  --console-muted: #8A8680;
+
+  /* Markdown syntax highlighting - Amp-inspired light */
+  --md-structure: #9A9B94;
+  --md-emphasis: #0B0D0B;
+  --md-emphasis-marker: #9A9B94;
+  --md-code: #5B7A6A;
+  --md-code-marker: #9A9B94;
+  --md-link-text: #5B7A6A;
+  --md-link-url: #878B86;
+  --md-list-marker: #5B7A6A;
+  --md-italic: #4A4A40;
 }
 
 html {
@@ -86,6 +163,31 @@ body {
   -webkit-font-smoothing: antialiased;
   background-color: var(--color-bg);
   color: var(--color-text);
+  /* Subtle vertical dotted lines - short dashes */
+  --dashed-line: repeating-linear-gradient(
+    180deg,
+    var(--color-border) 0px,
+    var(--color-border) 4px,
+    transparent 4px,
+    transparent 12px
+  );
+  background-image:
+    var(--dashed-line),
+    var(--dashed-line),
+    var(--dashed-line),
+    var(--dashed-line),
+    var(--dashed-line),
+    var(--dashed-line),
+    var(--dashed-line),
+    var(--dashed-line);
+  background-size: 0.5px 100%;
+  background-position:
+    54px 0,
+    350px 0,
+    750px 0,
+    1170px 0,
+    1350px 0;
+  background-repeat: no-repeat;
 }
 
 h1,
@@ -124,7 +226,7 @@ pre {
 
 @media (prefers-color-scheme: dark) {
   pre {
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: #121714;
   }
 }
 
@@ -150,9 +252,9 @@ pre {
 code {
   font-family: var(--font-family-mono);
   font-size: 14px;
-  padding: 0.2em 0.4em;
-  border-radius: 0.3em;
-  background-color: var(--color-border);
+  padding: 0;
+  background: none;
+  color: var(--color-accent-secondary);
 }
 
 pre code {
@@ -169,7 +271,7 @@ pre code > span .sh__token--identifier {
 
 code:not(pre code) span {
   font-weight: 500;
-  color: var(--color-text) !important;
+  color: var(--color-accent-secondary) !important;
 }
 
 pre code span {
@@ -197,8 +299,13 @@ table {
 
 /* Links - amp style with underline */
 a {
+  color: var(--color-link);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
+}
+
+a:hover {
+  opacity: 0.8;
 }
 
 .transition-element {
@@ -206,31 +313,15 @@ a {
 }
 
 ::view-transition-old(lee) {
-  animation: fade-out 0.2s ease-out;
+  animation: none;
 }
 
 ::view-transition-new(lee) {
-  animation: fade-in 0.3s ease-in;
-}
-
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@supports (view-transition-name: none) {
-  .fade-in {
-    animation: fade-in 0.8s ease-in-out forwards;
-    opacity: 0;
-  }
+  animation: none;
 }
 
 /* Console markdown styles - Minimal Brutalist */
+/* Base size: 12px (text-xs) for consistency with input */
 .console-markdown {
   font-size: 12px;
   line-height: 1.6;
@@ -258,18 +349,18 @@ a {
   margin: 1.25em 0 0.5em;
 }
 
-.console-markdown h1 { font-size: 13px; color: #fff; }
-.console-markdown h2 { font-size: 12px; color: #ccc; }
-.console-markdown h3 { font-size: 11px; color: #999; }
+.console-markdown h1 { font-size: 13px; color: #E8E4D9; }
+.console-markdown h2 { font-size: 12px; color: #C8C4B9; }
+.console-markdown h3 { font-size: 11px; color: #8A8680; }
 
-.console-markdown h1::before { content: "# "; color: #5a9848; opacity: 0.6; }
-.console-markdown h2::before { content: "## "; color: #5a9848; opacity: 0.6; }
-.console-markdown h3::before { content: "### "; color: #5a9848; opacity: 0.6; }
+.console-markdown h1::before { content: "# "; color: #8A8680; opacity: 0.6; }
+.console-markdown h2::before { content: "## "; color: #8A8680; opacity: 0.6; }
+.console-markdown h3::before { content: "### "; color: #8A8680; opacity: 0.6; }
 
 /* Paragraphs */
 .console-markdown p {
   margin-bottom: 0.75em;
-  color: #e8e4d9;
+  color: #E8E4D9;
 }
 
 /* Strong = bright, em = accent */
@@ -279,16 +370,17 @@ a {
 }
 
 .console-markdown em {
-  color: #c9a85c;
-  font-style: normal;
+  color: #E8E4D9;
+  font-style: italic;
 }
 
 /* Inline code */
 .console-markdown code {
-  color: #5a9848;
-  background: none;
-  padding: 0;
-  font-size: 11px;
+  color: #E8E4D9;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 12px;
 }
 
 /* Code blocks - barely there */
@@ -302,8 +394,10 @@ a {
 }
 
 .console-markdown pre code {
-  color: #e8e4d9;
-  font-size: 11px;
+  color: #E8E4D9;
+  background: none;
+  padding: 0;
+  font-size: 12px;
 }
 
 /* Lists - minimal */
@@ -316,7 +410,7 @@ a {
 
 .console-markdown li {
   margin: 0.3em 0;
-  color: #bbb;
+  color: #E8E4D9;
   padding-left: 1.25em;
   position: relative;
 }
@@ -325,7 +419,7 @@ a {
   content: "-";
   position: absolute;
   left: 0;
-  color: #5a9848;
+  color: #8A8680;
 }
 
 .console-markdown ol {
@@ -337,18 +431,20 @@ a {
   content: counter(item) ".";
   position: absolute;
   left: 0;
-  color: #5a9848;
+  color: #8A8680;
 }
 
-/* Links */
-.console-markdown a {
-  color: #5a9848;
-  text-decoration: none;
-  border-bottom: 1px dashed #3d5a32;
+/* Links - override Streamdown's text-primary */
+.console-markdown a,
+.console-markdown a.text-primary,
+.console-markdown [data-streamdown="link"] {
+  color: #1588B2 !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .console-markdown a:hover {
-  color: #7dd89a;
+  opacity: 0.8;
 }
 
 /* Tables - aggressively override Streamdown's defaults */
@@ -377,7 +473,7 @@ a {
 .console-markdown .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 12px;
   background: none !important;
   border: none !important;
 }
@@ -391,7 +487,7 @@ a {
   text-align: left;
   color: #666 !important;
   font-weight: normal !important;
-  font-size: 10px !important;
+  font-size: 11px !important;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 0 1.5em 0.5em 0 !important;
@@ -412,7 +508,7 @@ a {
 .console-markdown td,
 .console-markdown .table-cell {
   padding: 0.5em 1.5em 0.5em 0 !important;
-  color: #e8e4d9 !important;
+  color: #E8E4D9 !important;
   border: none !important;
   background: none !important;
   vertical-align: top;
@@ -460,22 +556,42 @@ a {
 }
 
 .console-markdown input[type="checkbox"]:checked {
-  background: #5a9848;
-  border-color: #5a9848;
+  background: #E8E4D9;
+  border-color: #E8E4D9;
 }
 
 .console-markdown input[type="checkbox"]:checked::after {
   content: "✓";
   position: absolute;
   color: #000;
-  font-size: 10px;
+  font-size: 11px;
   top: -1px;
   left: 1px;
 }
 
-/* Console light theme markdown (inherits from CSS variables) */
+/* Console markdown - always uses dark theme colors */
 .console-markdown-light {
-  color: var(--color-text);
+  color: #E8E4D9;
+}
+
+.console-markdown-light a,
+.console-markdown-light a.text-primary,
+.console-markdown-light [data-streamdown="link"] {
+  color: #1588B2 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .console-markdown-light a,
+  :root:not(.light) .console-markdown-light a.text-primary,
+  :root:not(.light) .console-markdown-light [data-streamdown="link"] {
+    color: #F6833B !important;
+  }
+}
+
+:root.dark .console-markdown-light a,
+:root.dark .console-markdown-light a.text-primary,
+:root.dark .console-markdown-light [data-streamdown="link"] {
+  color: #F6833B !important;
 }
 
 .console-table {
@@ -483,25 +599,25 @@ a {
   border: none;
   border-collapse: collapse;
   width: 100%;
-  font-size: 11px;
+  font-size: 12px;
   margin: 0.75em 0;
 }
 
 .console-thead {
-  border-bottom: 1px solid var(--color-muted);
+  border-bottom: 1px solid #666;
 }
 
 .console-tr {
   background: none;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #333;
 }
 
 .console-th {
   background: none;
   border: none;
-  color: var(--color-muted);
+  color: #888;
   font-weight: normal;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 0 1.5em 0.5em 0;
@@ -511,22 +627,132 @@ a {
 .console-td {
   background: none;
   border: none;
-  color: var(--color-text);
+  color: #E8E4D9;
   padding: 0.5em 1.5em 0.5em 0;
   vertical-align: top;
 }
 
-.console-pre {
-  background: var(--color-border);
-  padding: 0.75em 1em;
+.console-pre-wrapper {
+  position: relative;
   margin: 0.75em 0;
+}
+
+.console-copy-btn {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  padding: 0.25em;
+  color: var(--console-muted);
+  background: transparent;
+  border: none;
   border-radius: 2px;
-  border-left: 2px solid var(--color-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.console-pre-wrapper:hover .console-copy-btn {
+  opacity: 1;
+}
+
+.console-copy-btn:hover {
+  color: var(--console-text);
+}
+
+.console-pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75em 1em;
+  margin: 0;
+  border-radius: 2px;
+  border-left: 2px solid #444;
   overflow: auto;
 }
 
 .console-code {
-  color: var(--color-accent);
+  color: var(--console-accent);
   background: none;
-  font-size: 11px;
+  font-size: 12px;
+}
+
+/* Syntax-highlighted code in console */
+.console-code-highlighted {
+  background: none;
+  font-size: 12px;
+  color: var(--console-text);
+}
+
+/* Raw Markdown Syntax Highlighting */
+.md-hash {
+  color: var(--md-structure);
+}
+
+.md-hr {
+  color: var(--md-structure);
+  opacity: 0.6;
+}
+
+.md-bold-marker {
+  color: var(--md-emphasis-marker);
+}
+
+.md-bold {
+  color: var(--md-emphasis);
+}
+
+.md-italic-marker {
+  color: var(--md-emphasis-marker);
+}
+
+.md-italic {
+  color: var(--md-italic);
+  font-style: italic;
+}
+
+.md-code-marker {
+  color: var(--md-code-marker);
+}
+
+.md-code {
+  color: var(--md-code);
+}
+
+.md-table-pipe {
+  color: var(--md-structure);
+  opacity: 0.7;
+}
+
+.md-table-dash {
+  color: var(--md-structure);
+  opacity: 0.5;
+}
+
+.md-table-colon {
+  color: var(--md-structure);
+  opacity: 0.6;
+}
+
+.md-list-marker {
+  color: var(--md-list-marker);
+}
+
+.md-link-bracket,
+.md-link-paren {
+  color: var(--md-structure);
+}
+
+.md-link-text {
+  color: var(--md-link-text);
+}
+
+.md-link-url {
+  color: var(--md-link-url);
+}
+
+.md-link {
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.md-link:hover {
+  opacity: 0.7;
 }

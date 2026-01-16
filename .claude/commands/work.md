@@ -6,14 +6,8 @@ Show Ryan's work history and open source projects. Use markdown links for URLs.
 
 ## Work
 
-**Vercel** (2020-present)
-VP of Product. Grew Next.js to 1M+ active developers. Built DevRel team.
-
-**Hy-Vee** (2018-2020)
-Senior Engineer. Rebuilt e-commerce with React/Next.js. Microservices, GraphQL, K8s.
-
-**Workiva** (2015-2018)
-Engineer. First production React. Built monitoring tools.
+**Hiro** (2020-2024)
+Building Bitcoin developer tools. Stacks blockchain infrastructure.
 
 ## Open Source
 

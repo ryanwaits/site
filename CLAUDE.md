@@ -16,7 +16,7 @@ Personal site: Next.js 15, React 19, MDX, Tailwind v4.
 ### Agent Console
 - `app/components/console.tsx` — AI chat interface (press `A` to toggle)
 - `app/api/chat/route.ts` — Claude Agent SDK streaming endpoint
-- `.claude/commands/` — Slash commands (`/about`, `/work`, `/words`, `/read`)
+- `.claude/commands/` — Slash commands (`/about`, `/work`, `/text`, `/read`)
 - `.claude/skills/` — Auto-triggered skills (`writings-expert`, `site-navigator`)
 
 ### Content Structure

@@ -73,7 +73,7 @@ export function SiteEffectsProvider({ children }: { children: ReactNode }) {
       {children}
 
       {/* Matrix Rain Effect */}
-      {showMatrix && <MatrixRain onComplete={() => setShowMatrix(false)} />}
+      {showMatrix && <MatrixRain theme={theme} onComplete={() => setShowMatrix(false)} />}
 
       {/* Confetti Effect */}
       {showConfetti && <Confetti />}
@@ -81,10 +81,26 @@ export function SiteEffectsProvider({ children }: { children: ReactNode }) {
   )
 }
 
-function MatrixRain({ onComplete }: { onComplete: () => void }) {
+function MatrixRain({ theme, onComplete }: { theme: 'light' | 'dark'; onComplete: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [phase, setPhase] = useState<'fade-in' | 'running' | 'fade-out'>('fade-in')
   const [opacity, setOpacity] = useState(0)
+
+  const isDark = theme === 'dark'
+
+  // Play audio on mount
+  useEffect(() => {
+    const audio = new Audio('/audio/spybreak.mp3')
+    audio.volume = 0.7
+    audioRef.current = audio
+    audio.play().catch(() => {}) // Ignore autoplay restrictions
+
+    return () => {
+      audio.pause()
+      audio.src = ''
+    }
+  }, [])
 
   useEffect(() => {
     // Phase timing: fade-in (1.5s) -> running (4s) -> fade-out (1.5s)
@@ -128,9 +144,12 @@ function MatrixRain({ onComplete }: { onComplete: () => void }) {
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
 
-    const colors = ['#5a9848', '#8ab878', '#2d7828', '#b8c8a0', '#d4d4b8']
-    const leadColor = '#e8e4d9'
-    const bgColor = 'rgba(232, 228, 217, 0.08)'
+    // Dark: classic Matrix green on black | Light: muted greens on cream
+    const colors = isDark
+      ? ['#00ff41', '#008f11', '#00b33c', '#003b00', '#00ff41']
+      : ['#5a9848', '#8ab878', '#2d7828', '#b8c8a0', '#d4d4b8']
+    const leadColor = isDark ? '#ffffff' : '#e8e4d9'
+    const bgColor = isDark ? 'rgba(0, 0, 0, 0.08)' : 'rgba(232, 228, 217, 0.08)'
 
     const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF<>/{}[]'
     const fontSize = 14
@@ -209,7 +228,7 @@ function MatrixRain({ onComplete }: { onComplete: () => void }) {
       clearInterval(interval)
       window.removeEventListener('resize', handleResize)
     }
-  }, [])
+  }, [isDark])
 
   return (
     <canvas
@@ -217,7 +236,7 @@ function MatrixRain({ onComplete }: { onComplete: () => void }) {
       className="fixed inset-0 z-[100] pointer-events-none transition-opacity duration-300"
       style={{
         opacity,
-        mixBlendMode: 'multiply',
+        mixBlendMode: isDark ? 'screen' : 'multiply',
       }}
     />
   )

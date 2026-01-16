@@ -8,7 +8,6 @@ Tell the user about Ryan Waits. Use proper markdown links for URLs.
 Ryan is a product engineer building developer tools. Passionate about DX, open-source, and teaching.
 
 ## Background
-- VP of Product at Vercel (grew Next.js to 1M+ active developers)
 - Previously at Hiro building Bitcoin developer tools
 
 ## Philosophy

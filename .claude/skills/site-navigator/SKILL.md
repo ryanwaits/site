@@ -11,17 +11,17 @@ Help users discover and navigate Ryan's site content.
 
 ```
 / (homepage)
-├── /work - Work history and open source projects
-└── /n/ - Notes/writings
-    ├── /n/dx - Developer Experience
-    ├── /n/developer-marketing - Developer Marketing
-    ├── /n/devrel - Developer Relations
-    ├── /n/devtools - Developer Products
-    ├── /n/moderation - Community Moderation
-    ├── /n/rust - Rust is Eating JavaScript
-    ├── /n/product-engineers - Product Engineers
-    ├── /n/stack - My Stack
-    └── /n/ai - Understanding AI
+├── /jobs - Employment history
+├── /projects - Open source projects
+├── /text - Writings/notes
+├── /experiments - Playground/experiments
+└── /n/ - Individual posts
+    ├── /n/2000-to-100 - From 2000 Lines to 100
+    ├── /n/features-dont-compose - Features Don't Compose
+    ├── /n/new-standard-who-dis - New Standard, Who Dis?
+    ├── /n/json-schema-contract - Pick a Standard, Extend Carefully
+    ├── /n/codecov-but-for-docs - Codecov, But for Docs
+    └── /n/how-does-this-not-exist - How Does This Not Exist?
 ```
 
 ## Content Categories

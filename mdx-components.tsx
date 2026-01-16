@@ -12,7 +12,7 @@ type BlockquoteProps = ComponentPropsWithoutRef<'blockquote'>;
 const components = {
   h1: (props: HeadingProps) => (
     <h1
-      className="font-serif text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.1] pt-4 mb-8 fade-in"
+      className="font-serif text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.1] pt-4 mb-8"
       {...props}
     />
   ),
@@ -32,17 +32,17 @@ const components = {
     <h4 className="font-serif text-lg mt-8 mb-2" {...props} />
   ),
   p: (props: ParagraphProps) => (
-    <p className="leading-[1.6] mb-6 text-[#0b0d0b]/80" {...props} />
+    <p className="leading-[1.6] mb-6 text-[var(--color-text)]/80" {...props} />
   ),
   ol: (props: ListProps) => (
     <ol
-      className="list-decimal pl-6 space-y-3 mb-6 text-[#0b0d0b]/80 leading-[1.6]"
+      className="list-decimal pl-6 space-y-3 mb-6 text-[var(--color-text)]/80 leading-[1.6]"
       {...props}
     />
   ),
   ul: (props: ListProps) => (
     <ul
-      className="list-disc pl-6 space-y-2 mb-6 text-[#0b0d0b]/80 leading-[1.6]"
+      className="list-disc pl-6 space-y-2 mb-6 text-[var(--color-text)]/80 leading-[1.6]"
       {...props}
     />
   ),
@@ -54,7 +54,7 @@ const components = {
     <strong className="font-semibold" {...props} />
   ),
   a: ({ href, children, ...props }: AnchorProps) => {
-    const className = 'underline decoration-[#0b0d0b]/30 underline-offset-2 hover:decoration-[#0b0d0b]/60 transition-colors';
+    const className = 'text-[var(--color-accent)] underline decoration-[var(--color-accent)]/30 underline-offset-2 hover:decoration-[var(--color-accent)]/60 transition-colors';
     if (href?.startsWith('/')) {
       return (
         <Link href={href} className={className} {...props}>
@@ -85,7 +85,7 @@ const components = {
     const codeHTML = highlight(children as string);
     return (
       <code
-        className="bg-[#0b0d0b]/5 px-1.5 py-0.5 rounded text-sm font-mono"
+        className="bg-[var(--color-border)] px-1.5 py-0.5 rounded text-sm font-mono"
         dangerouslySetInnerHTML={{ __html: codeHTML }}
         {...props}
       />
@@ -93,7 +93,7 @@ const components = {
   },
   pre: ({ children, ...props }: ComponentPropsWithoutRef<'pre'>) => (
     <pre
-      className="bg-[#0b0d0b] text-[#d4d4b8] p-4 rounded-lg overflow-x-auto mb-6 text-sm"
+      className="bg-[var(--color-border)] p-4 rounded-lg overflow-x-auto mb-6 text-sm"
       {...props}
     >
       {children}
@@ -102,7 +102,7 @@ const components = {
   Table: ({ data }: { data: { headers: string[]; rows: string[][] } }) => (
     <table className="w-full mb-6 text-sm">
       <thead>
-        <tr className="border-b border-[#0b0d0b]/10">
+        <tr className="border-b border-[var(--color-border)]">
           {data.headers.map((header, index) => (
             <th key={index} className="text-left py-2 font-semibold">
               {header}
@@ -112,7 +112,7 @@ const components = {
       </thead>
       <tbody>
         {data.rows.map((row, index) => (
-          <tr key={index} className="border-b border-[#0b0d0b]/5">
+          <tr key={index} className="border-b border-[var(--color-border)]">
             {row.map((cell, cellIndex) => (
               <td key={cellIndex} className="py-2">
                 {cell}
@@ -125,11 +125,11 @@ const components = {
   ),
   blockquote: (props: BlockquoteProps) => (
     <blockquote
-      className="border-l-2 border-[#0b0d0b]/20 pl-6 my-6 text-[#0b0d0b]/70 italic"
+      className="border-l-2 border-[var(--color-muted)] pl-6 my-6 text-[var(--color-muted)] italic"
       {...props}
     />
   ),
-  hr: () => <hr className="border-t border-[#0b0d0b]/10 my-12" />,
+  hr: () => <hr className="border-t border-[var(--color-border)] my-12" />,
 };
 
 declare global {

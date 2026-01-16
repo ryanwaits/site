@@ -4,7 +4,9 @@ import { useState, useEffect, useRef, useCallback, ComponentPropsWithoutRef } fr
 import { Streamdown } from 'streamdown'
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import { serialize } from 'next-mdx-remote/serialize'
+import { highlight } from 'sugar-high'
 import { viewComponents } from './view-components'
+import { posts } from '@/app/n/posts'
 
 interface ViewData {
   title: string
@@ -36,7 +38,8 @@ const DEFAULT_STATE: WindowState = { x: -1, y: -1, width: 560, height: 400 }
 const MIN_SIZE = { width: 400, height: 300 }
 
 // Simple welcome text
-const WELCOME_TEXT = `Type /help for commands. Press A to toggle.`
+const WELCOME_TEXT = `Claude Agent SDK v0.2.7
+Sonnet 4`
 
 // Custom markdown components - uses CSS variables for theming
 const markdownComponents = {
@@ -68,16 +71,73 @@ const markdownComponents = {
       {children}
     </td>
   ),
-  pre: ({ children, ...props }: ComponentPropsWithoutRef<'pre'>) => (
-    <pre {...props} className="console-pre">
-      {children}
-    </pre>
-  ),
-  code: ({ children, ...props }: ComponentPropsWithoutRef<'code'>) => (
-    <code {...props} className="console-code">
-      {children}
-    </code>
-  ),
+  pre: ({ children, ...props }: ComponentPropsWithoutRef<'pre'>) => {
+    const [copied, setCopied] = useState(false)
+
+    const handleCopy = () => {
+      // Extract text from children (code element)
+      let text = ''
+      if (children && typeof children === 'object' && 'props' in children) {
+        const codeProps = children.props as { children?: unknown }
+        if (typeof codeProps.children === 'string') {
+          text = codeProps.children
+        }
+      }
+      navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    }
+
+    return (
+      <div className="console-pre-wrapper group">
+        <button
+          onClick={handleCopy}
+          className="console-copy-btn"
+          aria-label="Copy code"
+        >
+          {copied ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          )}
+        </button>
+        <pre {...props} className="console-pre">
+          {children}
+        </pre>
+      </div>
+    )
+  },
+  code: ({ children, className, ...props }: ComponentPropsWithoutRef<'code'>) => {
+    // Extract string content - children might be string, [string], or React elements
+    const content = typeof children === 'string'
+      ? children
+      : Array.isArray(children) && children.length === 1 && typeof children[0] === 'string'
+        ? children[0]
+        : null
+
+    // Apply sugar-high highlighting for string content
+    if (content) {
+      const codeHTML = highlight(content)
+      return (
+        <code
+          {...props}
+          className="console-code-highlighted"
+          dangerouslySetInnerHTML={{ __html: codeHTML }}
+        />
+      )
+    }
+    // Already processed by Shiki or complex content
+    return (
+      <code {...props} className={className || 'console-code'}>
+        {children}
+      </code>
+    )
+  },
 }
 
 // Braille spinner frames
@@ -93,7 +153,7 @@ function Spinner() {
     return () => clearInterval(interval)
   }, [])
 
-  return <span className="text-[var(--color-accent)]">{SPINNER_FRAMES[frame]}</span>
+  return <span className="text-[var(--console-accent)]">{SPINNER_FRAMES[frame]}</span>
 }
 
 function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isActive: boolean }) {
@@ -102,7 +162,7 @@ function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isA
   return (
     <div className="pl-4 space-y-1 text-xs mb-2">
       {activities.map((activity, i) => (
-        <div key={i} className="flex items-center gap-2 text-[var(--color-muted)]">
+        <div key={i} className="flex items-center gap-2 text-[var(--console-muted)]">
           {activity.type === 'thinking' ? (
             <>
               <Spinner />
@@ -110,7 +170,7 @@ function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isA
             </>
           ) : (
             <>
-              <span className="text-[var(--color-accent)]">◇</span>
+              <span className="text-[var(--console-accent)]">◇</span>
               <span>{activity.tool}</span>
               {activity.detail && (
                 <span className="opacity-60">{activity.detail}</span>
@@ -142,12 +202,12 @@ function InlineView({ view }: { view: ViewData }) {
   }
 
   if (!compiled) {
-    return <div className="text-[var(--color-muted)] text-xs">Rendering...</div>
+    return <div className="text-[var(--console-muted)] text-xs">Rendering...</div>
   }
 
   return (
     <div className="my-2">
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-muted)] mb-2 font-mono">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--console-muted)] mb-2 font-mono">
         ◇ {view.title}
       </div>
       <div className="prose prose-sm max-w-none text-xs">
@@ -162,32 +222,49 @@ interface ConsoleProps {
   hideButton?: boolean
 }
 
+// Command registry with descriptions for typeahead
+const COMMAND_REGISTRY: Array<{
+  name: string
+  description: string
+  type: 'client' | 'server'
+  args?: string
+}> = [
+  // Client commands (instant)
+  { name: 'help', description: 'Show available commands', type: 'client' },
+  { name: 'clear', description: 'Clear console history', type: 'client' },
+  { name: 'toggle-theme', description: 'Toggle dark/light mode', type: 'client' },
+  { name: 'matrix', description: 'Enter the Matrix', type: 'client' },
+  { name: 'confetti', description: 'Celebrate!', type: 'client' },
+  { name: 'view', description: 'Generate a custom view', type: 'client', args: '<prompt>' },
+  // Server commands (sent to Claude)
+  { name: 'about', description: 'About Ryan Waits', type: 'server' },
+  { name: 'work', description: 'Work history and projects', type: 'server' },
+  { name: 'words', description: 'List of writings', type: 'server' },
+  { name: 'read', description: 'Read and discuss a blog post', type: 'server', args: '<slug>' },
+]
+
 // Client-side commands - bypass API for instant response
 // Note: 'view' command is handled specially in sendMessage since it needs router
 const CLIENT_COMMANDS: Record<string, (args: string, helpers: {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
   onCommand?: (action: string, value: string) => void
 }) => string | null> = {
-  help: () => `## Commands
-
-- \`/help\` - Show this help
-- \`/view <prompt>\` - Generate a custom view
-- \`/clear\` - Clear console
-
-Or just ask anything.`,
+  help: () => {
+    const clientCmds = COMMAND_REGISTRY.filter(c => c.type === 'client')
+    const serverCmds = COMMAND_REGISTRY.filter(c => c.type === 'server')
+    return `## Commands\n\n**Instant**\n${clientCmds.map(c => `- \`/${c.name}${c.args ? ' ' + c.args : ''}\` - ${c.description}`).join('\n')}\n\n**Agent**\n${serverCmds.map(c => `- \`/${c.name}${c.args ? ' ' + c.args : ''}\` - ${c.description}`).join('\n')}\n\nOr just ask anything.`
+  },
 
   clear: (_, { setMessages }) => {
     setMessages([])
     return null
   },
 
-  theme: (args, { onCommand }) => {
-    const theme = args.trim().toLowerCase()
-    if (theme === 'dark' || theme === 'light') {
-      onCommand?.('theme', theme)
-      return `Switched to ${theme} mode.`
-    }
-    return 'Usage: /theme dark | light'
+  'toggle-theme': (_, { onCommand }) => {
+    const isDark = document.documentElement.classList.contains('dark')
+    const newTheme = isDark ? 'light' : 'dark'
+    onCommand?.('theme', newTheme)
+    return `Switched to ${newTheme} mode.`
   },
 
   matrix: (_, { onCommand }) => {
@@ -210,6 +287,40 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   const [currentActivities, setCurrentActivities] = useState<Activity[]>([])
   const [inputHistory, setInputHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const [typeaheadIndex, setTypeaheadIndex] = useState(0)
+  const [mentionTypeaheadIndex, setMentionTypeaheadIndex] = useState(0)
+
+  // Compute filtered commands for typeahead
+  const showTypeahead = input.startsWith('/') && !input.includes(' ')
+  const typeaheadQuery = input.slice(1).toLowerCase()
+  const filteredCommands = showTypeahead
+    ? COMMAND_REGISTRY.filter(cmd => cmd.name.toLowerCase().startsWith(typeaheadQuery))
+    : []
+
+  // Compute @mention typeahead - detect @word pattern anywhere in input
+  const mentionMatch = input.match(/@(\S*)$/)
+  const showMentionTypeahead = mentionMatch !== null && !showTypeahead
+  const mentionQuery = mentionMatch ? mentionMatch[1].toLowerCase() : ''
+  const filteredPosts = showMentionTypeahead
+    ? posts.filter(p => p.slug.toLowerCase().includes(mentionQuery) || p.title.toLowerCase().includes(mentionQuery))
+    : []
+
+  // Reset typeahead index when filtered results change
+  useEffect(() => {
+    setTypeaheadIndex(0)
+  }, [typeaheadQuery])
+
+  useEffect(() => {
+    setMentionTypeaheadIndex(0)
+  }, [mentionQuery])
+
+  // Scroll selected typeahead option into view
+  useEffect(() => {
+    if (showTypeahead && typeaheadRef.current) {
+      const selected = typeaheadRef.current.querySelector(`[data-index="${typeaheadIndex}"]`)
+      selected?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [typeaheadIndex, showTypeahead])
 
   // Window state
   const [windowState, setWindowState] = useState<WindowState>(DEFAULT_STATE)
@@ -218,6 +329,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const typeaheadRef = useRef<HTMLDivElement>(null)
   const dragOffset = useRef({ x: 0, y: 0 })
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 })
 
@@ -350,6 +462,25 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     return () => window.removeEventListener('toggle-agent', handleToggle)
   }, [isOpen])
 
+  // Listen for external prefill/submit events
+  useEffect(() => {
+    const handlePrefill = (e: Event) => {
+      const detail = (e as CustomEvent<{ text: string; autoSubmit?: boolean }>).detail
+      if (detail.autoSubmit) {
+        // Auto-submit: open console and send message
+        setIsOpen(true)
+        // Small delay to ensure console is open before sending
+        setTimeout(() => sendMessage(detail.text), 100)
+      } else {
+        // Prefill only: open console and set input
+        setIsOpen(true)
+        setInput(detail.text)
+      }
+    }
+    window.addEventListener('agent-prefill', handlePrefill)
+    return () => window.removeEventListener('agent-prefill', handlePrefill)
+  }, [])
+
   // Focus input when opening
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -396,13 +527,13 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     }
   }, [onCommand])
 
-  const sendMessage = async () => {
-    if (!input.trim() || isStreaming) return
+  const sendMessage = async (messageOverride?: string) => {
+    const userMessage = messageOverride?.trim() || input.trim()
+    if (!userMessage || isStreaming) return
 
-    const userMessage = input.trim()
     setInputHistory(prev => [...prev, userMessage])
     setHistoryIndex(-1)
-    setInput('')
+    if (!messageOverride) setInput('')
     // Reset textarea height and maintain focus
     if (inputRef.current) {
       inputRef.current.style.height = 'auto'
@@ -502,6 +633,17 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       }
     }
 
+    // Extract @mentions from message
+    const mentionRegex = /@([\w-]+)/g
+    const mentions: string[] = []
+    let match
+    while ((match = mentionRegex.exec(userMessage)) !== null) {
+      const slug = match[1]
+      if (posts.some(p => p.slug === slug)) {
+        mentions.push(slug)
+      }
+    }
+
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setIsStreaming(true)
     setCurrentActivities([{ type: 'thinking' }])
@@ -511,7 +653,11 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({
+          message: userMessage,
+          history: messages.map(m => ({ role: m.role, content: m.content })),
+          mentions,
+        }),
       })
 
       if (!response.ok) {
@@ -599,7 +745,62 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     }
   }
 
+  const selectTypeaheadCommand = (cmd: typeof COMMAND_REGISTRY[0]) => {
+    setTypeaheadIndex(0)
+    setInput(`/${cmd.name} `)
+  }
+
+  const selectMention = (post: typeof posts[0]) => {
+    setMentionTypeaheadIndex(0)
+    // Replace the @partial with @full-slug
+    const newInput = input.replace(/@\S*$/, `@${post.slug} `)
+    setInput(newInput)
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Typeahead navigation takes priority when visible
+    if (showTypeahead && filteredCommands.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setTypeaheadIndex(prev => Math.min(prev + 1, filteredCommands.length - 1))
+        return
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setTypeaheadIndex(prev => Math.max(prev - 1, 0))
+        return
+      } else if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
+        e.preventDefault()
+        selectTypeaheadCommand(filteredCommands[typeaheadIndex])
+        return
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setInput('')
+        return
+      }
+    }
+
+    // Mention typeahead navigation
+    if (showMentionTypeahead && filteredPosts.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setMentionTypeaheadIndex(prev => Math.min(prev + 1, filteredPosts.length - 1))
+        return
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setMentionTypeaheadIndex(prev => Math.max(prev - 1, 0))
+        return
+      } else if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
+        e.preventDefault()
+        selectMention(filteredPosts[mentionTypeaheadIndex])
+        return
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        // Remove the @partial
+        setInput(input.replace(/@\S*$/, ''))
+        return
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
@@ -647,7 +848,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       }}
     >
       {/* Outer Frame - stripe.dev Art style */}
-      <div className="h-full flex flex-col bg-[var(--color-bg)] border border-[var(--color-text)] p-1 relative">
+      <div className="h-full flex flex-col bg-[var(--console-outer-bg)] border border-[var(--color-text)] p-1 relative">
 
         {/* Chrome Title Bar */}
         <div
@@ -697,10 +898,10 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
           }}
         >
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-[var(--console-content-bg)]">
             {messages.length === 0 && (
-              <div className="text-[var(--color-muted)]">
-                <p className="text-[11px]">{WELCOME_TEXT}</p>
+              <div className="text-[var(--console-muted)]">
+                <p className="text-[11px] whitespace-pre-line">{WELCOME_TEXT}</p>
               </div>
             )}
             {messages.map((msg, i) => {
@@ -709,10 +910,10 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
               const showCurrentActivities = isLastMessage && isStreaming && currentActivities.length > 0
 
               return (
-                <div key={i} className={msg.role === 'user' ? 'text-[var(--color-muted)]' : 'text-[var(--color-text)]'}>
+                <div key={i} className={msg.role === 'user' ? 'text-[var(--console-muted)]' : 'text-[var(--console-text)]'}>
                   {msg.role === 'user' ? (
                     <div className="flex items-start gap-2">
-                      <span className="text-[var(--color-accent)]">❯</span>
+                      <span className="text-[var(--console-accent)]">❯</span>
                       <span>{msg.content}</span>
                     </div>
                   ) : (
@@ -739,7 +940,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
                           </Streamdown>
                         ) : (
                           isLastMessage && isStreaming && currentActivities.length === 0 && (
-                            <span className="text-[var(--color-muted)]">...</span>
+                            <span className="text-[var(--console-muted)]">...</span>
                           )
                         )}
                       </div>
@@ -752,25 +953,72 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
           </div>
 
           {/* Input */}
-          <div className="border-t border-[var(--color-border)] p-3">
+          <div className="border-t border-[var(--color-border)] p-3 bg-[var(--console-content-bg)]">
             <div className="flex items-start gap-2">
-              <span className="text-[var(--color-accent)] leading-[1.4]">❯</span>
+              <span className="text-[var(--console-accent)] leading-[1.4]">❯</span>
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask anything or try /help..."
+                placeholder="Ask anything, try /... or @..."
                 disabled={isStreaming}
-                className="flex-1 bg-transparent text-[var(--color-text)] placeholder-[var(--color-muted)] outline-none resize-none text-xs leading-[1.4] overflow-y-auto"
+                className="flex-1 bg-transparent text-[var(--console-text)] placeholder-[var(--console-muted)] outline-none resize-none text-xs leading-[1.4] overflow-y-auto"
                 rows={1}
                 style={{ maxHeight: '120px' }}
               />
               {isStreaming && (
-                <span className="text-[var(--color-accent)] text-[10px] animate-pulse leading-[1.4]">●</span>
+                <span className="text-[var(--console-accent)] text-[10px] animate-pulse leading-[1.4]">●</span>
               )}
             </div>
           </div>
+
+          {/* Command Typeahead */}
+          {showTypeahead && filteredCommands.length > 0 && (
+            <div ref={typeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+              {filteredCommands.map((cmd, idx) => (
+                <div
+                  key={cmd.name}
+                  data-index={idx}
+                  onClick={() => selectTypeaheadCommand(cmd)}
+                  className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+                    idx === typeaheadIndex
+                      ? 'bg-[var(--console-accent)]/10'
+                      : 'hover:bg-[var(--console-accent)]/5'
+                  }`}
+                >
+                  <span className="text-[var(--console-accent)] w-24 shrink-0">/{cmd.name}</span>
+                  <span className="text-[var(--console-muted)] truncate">{cmd.description}</span>
+                  <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
+                    {cmd.type === 'client' ? 'instant' : 'agent'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* @Mention Typeahead */}
+          {showMentionTypeahead && filteredPosts.length > 0 && (
+            <div className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+              {filteredPosts.map((post, idx) => (
+                <div
+                  key={post.slug}
+                  onClick={() => selectMention(post)}
+                  className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+                    idx === mentionTypeaheadIndex
+                      ? 'bg-[var(--console-accent)]/10'
+                      : 'hover:bg-[var(--console-accent)]/5'
+                  }`}
+                >
+                  <span className="text-[#7aa2f7] shrink-0">@{post.slug}</span>
+                  <span className="text-[var(--console-muted)] truncate">{post.title}</span>
+                  <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
+                    {post.date}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Resize handle - bottom right corner */}
