@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 const NAV_ITEMS = [
-  { key: 'J', label: 'Jobs', href: '/jobs' },
-  { key: 'P', label: 'Projects', href: '/projects' },
+  { key: 'W', label: 'Work', href: '/work' },
   { key: 'T', label: 'Text', href: '/text' },
-  { key: 'E', label: 'Experiments', href: '/experiments' },
+  { key: 'J', label: 'Jobs', href: '/jobs' },
+  { key: 'P', label: 'Playground', href: '/playground' },
 ];
 
 // Map nested routes to their parent top-level page
@@ -16,8 +16,8 @@ function getParentRoute(pathname: string): string | null {
   // Define route mappings: prefix → parent
   const routeMappings: Array<{ prefix: string; parent: string }> = [
     { prefix: '/n/', parent: '/text' },           // Blog posts → Text
-    { prefix: '/experiments/', parent: '/experiments' },
-    { prefix: '/projects/', parent: '/projects' },
+    { prefix: '/playground/', parent: '/playground' },
+    { prefix: '/work/', parent: '/work' },
     { prefix: '/jobs/', parent: '/jobs' },
   ];
 
