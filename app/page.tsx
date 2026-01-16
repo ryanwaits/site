@@ -148,7 +148,7 @@ export default function HomePage() {
       <SelectionToolbar />
       <SiteNav />
       <main className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="max-w-3xl ml-[72px]">
+        <div className="max-w-3xl md:ml-[72px]">
           <MarkdownRaw
             content={MARKDOWN_CONTENT}
             className="text-[var(--color-text)]"

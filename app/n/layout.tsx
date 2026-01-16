@@ -11,7 +11,7 @@ export default function NotesLayout({
     <div className="h-screen flex flex-col bg-[var(--color-bg)]">
       <SiteNav />
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-6 py-12 md:py-16 ml-[72px]">
+        <div className="max-w-2xl px-6 py-12 md:py-16 md:ml-[72px]">
           <article>{children}</article>
           <PostNavigationWrapper />
         </div>

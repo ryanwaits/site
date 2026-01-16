@@ -13,7 +13,7 @@ interface PostNavigationProps {
 export function PostNavigation({ prev, next }: PostNavigationProps) {
   const router = useRouter();
 
-  // Keyboard shortcuts for arrow navigation
+  // Keyboard shortcuts for arrow navigation (Escape handled globally in site-nav)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input/textarea

@@ -14,7 +14,7 @@ export default function ExperimentsPage() {
     <div className="h-screen flex flex-col bg-[var(--color-bg)]">
       <SiteNav />
       <main className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="max-w-xl ml-[72px]">
+        <div className="max-w-xl md:ml-[72px]">
           <div className="flex items-center gap-3 mb-4 border-b border-[var(--color-border)] pb-3">
             <span className="font-mono text-xs text-[var(--color-muted)]">/</span>
             <h2 className="font-mono text-xs uppercase tracking-wider text-[var(--color-text)]">

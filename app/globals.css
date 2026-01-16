@@ -17,6 +17,11 @@
   --color-border: rgba(135, 139, 134, 0.12);
   --color-link: #0B0D0B;
   --color-nav-active: #1588B2;
+  --color-diff-add: #1588B2;
+  --color-diff-del: #DC2626;
+  --color-commit: #0B0D0B;
+  --color-commit-hash: #595959;
+  --color-commit-branch: #595959;
   --console-outer-bg: #F1EEEE;
   --console-content-bg: #16161e;
   --console-accent: #F6833B;
@@ -64,6 +69,11 @@
     --color-border: #2A2F2C;
     --color-link: #E8E4D9;
     --color-nav-active: #F6833B;
+    --color-diff-add: #34D399;
+    --color-diff-del: #F87171;
+    --color-commit: #EAB308;
+    --color-commit-hash: #CA8A04;
+    --color-commit-branch: #10B981;
     --console-outer-bg: #0B0D0B;
     --console-content-bg: #121714;
     --console-accent: #F6833B;
@@ -100,6 +110,11 @@
   --color-border: #2A2F2C;
   --color-link: #E8E4D9;
   --color-nav-active: #F6833B;
+  --color-diff-add: #34D399;
+  --color-diff-del: #F87171;
+  --color-commit: #EAB308;
+  --color-commit-hash: #CA8A04;
+  --color-commit-branch: #10B981;
   --console-outer-bg: #0B0D0B;
   --console-content-bg: #121714;
   --console-accent: #F6833B;
@@ -135,6 +150,11 @@
   --color-border: rgba(135, 139, 134, 0.12);
   --color-link: #0B0D0B;
   --color-nav-active: #1588B2;
+  --color-diff-add: #1588B2;
+  --color-diff-del: #DC2626;
+  --color-commit: #0B0D0B;
+  --color-commit-hash: #595959;
+  --color-commit-branch: #595959;
   --console-outer-bg: #F1EEEE;
   --console-content-bg: #16161e;
   --console-accent: #F6833B;
@@ -156,6 +176,7 @@
 html {
   min-width: 360px;
   scrollbar-gutter: stable;
+  overflow-x: hidden;
 }
 
 body {

@@ -37,6 +37,20 @@ const STORAGE_KEY = 'agent-window-state'
 const DEFAULT_STATE: WindowState = { x: -1, y: -1, width: 560, height: 400 }
 const MIN_SIZE = { width: 400, height: 300 }
 
+// Hook to detect mobile viewport
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  return isMobile
+}
+
 // Simple welcome text
 const WELCOME_TEXT = `Claude Agent SDK v0.2.7
 Sonnet 4`
@@ -279,6 +293,7 @@ const CLIENT_COMMANDS: Record<string, (args: string, helpers: {
 }
 
 export function Console({ onCommand, hideButton }: ConsoleProps) {
+  const isMobile = useIsMobile()
   const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [input, setInput] = useState('')
@@ -488,10 +503,20 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     }
   }, [isOpen])
 
-  // Scroll to bottom on new messages or activities
+  // Scroll to bottom on new messages, activities, or when opening
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, currentActivities])
+
+  // Scroll to bottom when opening (especially for mobile)
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
+      }, 50)
+    }
+  }, [isOpen])
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -834,6 +859,204 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     )
   }
 
+  // Shared content renderer for both mobile and desktop
+  const renderConsoleContent = () => (
+    <div
+      className="flex-1 flex flex-col bg-[var(--color-bg)] overflow-hidden"
+      onClick={(e) => {
+        const selection = window.getSelection()
+        const hasSelection = selection && selection.toString().length > 0
+        const isClickOnInput = (e.target as HTMLElement).tagName === 'TEXTAREA'
+        if (!hasSelection && !isClickOnInput && inputRef.current) {
+          inputRef.current.focus()
+        }
+      }}
+    >
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-[var(--console-content-bg)]">
+        {messages.length === 0 && (
+          <div className="text-[var(--console-muted)]">
+            <p className="text-[11px] whitespace-pre-line">{WELCOME_TEXT}</p>
+          </div>
+        )}
+        {messages.map((msg, i) => {
+          const isLastMessage = i === messages.length - 1
+          const showActivities = msg.role === 'assistant' && msg.activities && msg.activities.length > 0
+          const showCurrentActivities = isLastMessage && isStreaming && currentActivities.length > 0
+
+          return (
+            <div key={i} className={msg.role === 'user' ? 'text-[var(--console-muted)]' : 'text-[var(--console-text)]'}>
+              {msg.role === 'user' ? (
+                <div className="flex items-start gap-2">
+                  <span className="text-[var(--console-accent)]">❯</span>
+                  <span>{msg.content}</span>
+                </div>
+              ) : (
+                <>
+                  {showCurrentActivities && (
+                    <ActivityDisplay activities={currentActivities} isActive={isStreaming} />
+                  )}
+                  {!showCurrentActivities && showActivities && (
+                    <ActivityDisplay activities={msg.activities!} isActive={false} />
+                  )}
+                  <div className="pl-4 leading-relaxed console-markdown-light">
+                    {msg.view ? (
+                      <InlineView view={msg.view} />
+                    ) : msg.content ? (
+                      <Streamdown
+                        mode={isLastMessage && isStreaming ? 'streaming' : 'static'}
+                        isAnimating={isLastMessage && isStreaming}
+                        caret="block"
+                        controls={false}
+                        components={markdownComponents}
+                        className="text-xs"
+                      >
+                        {msg.content}
+                      </Streamdown>
+                    ) : (
+                      isLastMessage && isStreaming && currentActivities.length === 0 && (
+                        <span className="text-[var(--console-muted)]">...</span>
+                      )
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-[var(--color-border)] p-3 bg-[var(--console-content-bg)]">
+        <div className="flex items-start gap-2">
+          <span className="text-[var(--console-accent)] leading-[1.4]">❯</span>
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask anything, try /... or @..."
+            disabled={isStreaming}
+            className="flex-1 bg-transparent text-[var(--console-text)] placeholder-[var(--console-muted)] outline-none resize-none text-xs leading-[1.4] overflow-y-auto"
+            rows={1}
+            style={{ maxHeight: '120px' }}
+          />
+          {isStreaming && (
+            <span className="text-[var(--console-accent)] text-[10px] animate-pulse leading-[1.4]">●</span>
+          )}
+        </div>
+      </div>
+
+      {/* Command Typeahead */}
+      {showTypeahead && filteredCommands.length > 0 && (
+        <div ref={typeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+          {filteredCommands.map((cmd, idx) => (
+            <div
+              key={cmd.name}
+              data-index={idx}
+              onClick={() => selectTypeaheadCommand(cmd)}
+              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+                idx === typeaheadIndex
+                  ? 'bg-[var(--console-accent)]/10'
+                  : 'hover:bg-[var(--console-accent)]/5'
+              }`}
+            >
+              <span className="text-[var(--console-accent)] w-24 shrink-0">/{cmd.name}</span>
+              <span className="text-[var(--console-muted)] truncate">{cmd.description}</span>
+              <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
+                {cmd.type === 'client' ? 'instant' : 'agent'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* @Mention Typeahead */}
+      {showMentionTypeahead && filteredPosts.length > 0 && (
+        <div className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+          {filteredPosts.map((post, idx) => (
+            <div
+              key={post.slug}
+              onClick={() => selectMention(post)}
+              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+                idx === mentionTypeaheadIndex
+                  ? 'bg-[var(--console-accent)]/10'
+                  : 'hover:bg-[var(--console-accent)]/5'
+              }`}
+            >
+              <span className="text-[#7aa2f7] shrink-0">@{post.slug}</span>
+              <span className="text-[var(--console-muted)] truncate">{post.title}</span>
+              <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
+                {post.date}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  // Mobile: Bottom drawer
+  if (isMobile) {
+    return (
+      <>
+        {/* Backdrop */}
+        <div
+          className={`fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 ${
+            isClosing ? 'opacity-0' : 'opacity-100'
+          }`}
+          onClick={handleClose}
+        />
+
+        {/* Drawer */}
+        <div
+          className={`fixed inset-x-0 bottom-0 z-50 font-mono text-sm transition-transform duration-300 ease-out px-3 pb-3 ${
+            isClosing ? 'translate-y-full' : 'translate-y-0'
+          }`}
+          style={{ height: '50vh', maxHeight: '420px' }}
+        >
+          <div className="h-full flex flex-col bg-[var(--console-outer-bg)] border border-[var(--color-text)] rounded-lg p-1">
+            {/* Chrome Title Bar - same as desktop */}
+            <div className="flex-shrink-0 flex items-center gap-3 px-1 py-1">
+              {/* Console Icon */}
+              <div className="p-0.5 text-[var(--color-text)]">
+                <svg width="14" height="14" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M11 0H1V1H0V11H1V12H11V11H12V1H11V0ZM11 1V11H1V1H11ZM6 7H10V8H6V7ZM3 7H2V8H3V7ZM4 6V7H3V6H4ZM4 5V6H5V5H4ZM3 4H4V5H3V4ZM3 4V3H2V4H3Z" fill="currentColor"/>
+                </svg>
+              </div>
+
+              {/* Horizontal line */}
+              <div className="flex-1 h-px bg-[var(--color-muted)]" />
+
+              {/* Title Label */}
+              <span className="text-[11px] text-[var(--color-text)] tracking-[0.15em] uppercase font-medium whitespace-nowrap">[ Agent ]</span>
+
+              {/* Horizontal line */}
+              <div className="flex-1 h-px bg-[var(--color-muted)]" />
+
+              {/* Close Icon */}
+              <button
+                onClick={handleClose}
+                className="p-0.5 hover:opacity-60 transition-opacity text-[var(--color-text)]"
+              >
+                <svg width="14" height="14" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-h-0 flex flex-col border border-[var(--color-text)] overflow-hidden">
+              {renderConsoleContent()}
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Desktop: Draggable window
   return (
     <div
       className={`fixed z-50 font-mono text-sm ${
@@ -885,140 +1108,8 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
         </div>
 
         {/* Inner Content Frame */}
-        <div
-          className="flex-1 flex flex-col border border-[var(--color-text)] bg-[var(--color-bg)] overflow-hidden"
-          onClick={(e) => {
-            // Focus input when clicking inside console, but not if selecting text
-            const selection = window.getSelection()
-            const hasSelection = selection && selection.toString().length > 0
-            const isClickOnInput = (e.target as HTMLElement).tagName === 'TEXTAREA'
-            if (!hasSelection && !isClickOnInput && inputRef.current) {
-              inputRef.current.focus()
-            }
-          }}
-        >
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-[var(--console-content-bg)]">
-            {messages.length === 0 && (
-              <div className="text-[var(--console-muted)]">
-                <p className="text-[11px] whitespace-pre-line">{WELCOME_TEXT}</p>
-              </div>
-            )}
-            {messages.map((msg, i) => {
-              const isLastMessage = i === messages.length - 1
-              const showActivities = msg.role === 'assistant' && msg.activities && msg.activities.length > 0
-              const showCurrentActivities = isLastMessage && isStreaming && currentActivities.length > 0
-
-              return (
-                <div key={i} className={msg.role === 'user' ? 'text-[var(--console-muted)]' : 'text-[var(--console-text)]'}>
-                  {msg.role === 'user' ? (
-                    <div className="flex items-start gap-2">
-                      <span className="text-[var(--console-accent)]">❯</span>
-                      <span>{msg.content}</span>
-                    </div>
-                  ) : (
-                    <>
-                      {showCurrentActivities && (
-                        <ActivityDisplay activities={currentActivities} isActive={isStreaming} />
-                      )}
-                      {!showCurrentActivities && showActivities && (
-                        <ActivityDisplay activities={msg.activities!} isActive={false} />
-                      )}
-                      <div className="pl-4 leading-relaxed console-markdown-light">
-                        {msg.view ? (
-                          <InlineView view={msg.view} />
-                        ) : msg.content ? (
-                          <Streamdown
-                            mode={isLastMessage && isStreaming ? 'streaming' : 'static'}
-                            isAnimating={isLastMessage && isStreaming}
-                            caret="block"
-                            controls={false}
-                            components={markdownComponents}
-                            className="text-xs"
-                          >
-                            {msg.content}
-                          </Streamdown>
-                        ) : (
-                          isLastMessage && isStreaming && currentActivities.length === 0 && (
-                            <span className="text-[var(--console-muted)]">...</span>
-                          )
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )
-            })}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="border-t border-[var(--color-border)] p-3 bg-[var(--console-content-bg)]">
-            <div className="flex items-start gap-2">
-              <span className="text-[var(--console-accent)] leading-[1.4]">❯</span>
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask anything, try /... or @..."
-                disabled={isStreaming}
-                className="flex-1 bg-transparent text-[var(--console-text)] placeholder-[var(--console-muted)] outline-none resize-none text-xs leading-[1.4] overflow-y-auto"
-                rows={1}
-                style={{ maxHeight: '120px' }}
-              />
-              {isStreaming && (
-                <span className="text-[var(--console-accent)] text-[10px] animate-pulse leading-[1.4]">●</span>
-              )}
-            </div>
-          </div>
-
-          {/* Command Typeahead */}
-          {showTypeahead && filteredCommands.length > 0 && (
-            <div ref={typeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
-              {filteredCommands.map((cmd, idx) => (
-                <div
-                  key={cmd.name}
-                  data-index={idx}
-                  onClick={() => selectTypeaheadCommand(cmd)}
-                  className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
-                    idx === typeaheadIndex
-                      ? 'bg-[var(--console-accent)]/10'
-                      : 'hover:bg-[var(--console-accent)]/5'
-                  }`}
-                >
-                  <span className="text-[var(--console-accent)] w-24 shrink-0">/{cmd.name}</span>
-                  <span className="text-[var(--console-muted)] truncate">{cmd.description}</span>
-                  <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
-                    {cmd.type === 'client' ? 'instant' : 'agent'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* @Mention Typeahead */}
-          {showMentionTypeahead && filteredPosts.length > 0 && (
-            <div className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
-              {filteredPosts.map((post, idx) => (
-                <div
-                  key={post.slug}
-                  onClick={() => selectMention(post)}
-                  className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
-                    idx === mentionTypeaheadIndex
-                      ? 'bg-[var(--console-accent)]/10'
-                      : 'hover:bg-[var(--console-accent)]/5'
-                  }`}
-                >
-                  <span className="text-[#7aa2f7] shrink-0">@{post.slug}</span>
-                  <span className="text-[var(--console-muted)] truncate">{post.title}</span>
-                  <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
-                    {post.date}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="flex-1 flex flex-col border border-[var(--color-text)] overflow-hidden">
+          {renderConsoleContent()}
         </div>
 
         {/* Resize handle - bottom right corner */}

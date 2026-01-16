@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -11,10 +11,30 @@ const NAV_ITEMS = [
   { key: 'E', label: 'Experiments', href: '/experiments' },
 ];
 
+// Map nested routes to their parent top-level page
+function getParentRoute(pathname: string): string | null {
+  // Define route mappings: prefix → parent
+  const routeMappings: Array<{ prefix: string; parent: string }> = [
+    { prefix: '/n/', parent: '/text' },           // Blog posts → Text
+    { prefix: '/experiments/', parent: '/experiments' },
+    { prefix: '/projects/', parent: '/projects' },
+    { prefix: '/jobs/', parent: '/jobs' },
+  ];
+
+  for (const { prefix, parent } of routeMappings) {
+    if (pathname.startsWith(prefix)) {
+      return parent;
+    }
+  }
+
+  return null; // No parent (already at top level)
+}
+
 export function SiteNav() {
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === '/';
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -34,17 +54,29 @@ export function SiteNav() {
         return;
       }
 
-      // Arrow key navigation through pages
+      // Escape goes to parent page (if on nested route)
+      if (e.key === 'Escape') {
+        const parent = getParentRoute(pathname);
+        if (parent) {
+          router.push(parent);
+          return;
+        }
+      }
+
+      // Arrow key navigation through pages (only on main nav pages, not /n/* posts)
       const allPages = ['/', ...NAV_ITEMS.map(item => item.href)];
       const currentIndex = allPages.indexOf(pathname);
 
-      if (e.key === 'ArrowLeft' && currentIndex > 0) {
-        router.push(allPages[currentIndex - 1]);
-        return;
-      }
-      if (e.key === 'ArrowRight' && currentIndex < allPages.length - 1) {
-        router.push(allPages[currentIndex + 1]);
-        return;
+      // Only allow arrow nav on main nav pages
+      if (currentIndex !== -1) {
+        if (e.key === 'ArrowLeft' && currentIndex > 0) {
+          router.push(allPages[currentIndex - 1]);
+          return;
+        }
+        if (e.key === 'ArrowRight' && currentIndex < allPages.length - 1) {
+          router.push(allPages[currentIndex + 1]);
+          return;
+        }
       }
 
       const key = e.key.toUpperCase();
@@ -58,6 +90,11 @@ export function SiteNav() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [router]);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   return (
     <nav className="flex-shrink-0 bg-[var(--color-bg)] border-b border-[var(--color-border)]">
       <div className="flex items-center justify-between px-6 py-3">
@@ -65,14 +102,15 @@ export function SiteNav() {
         <div className="flex items-center gap-1">
           <Link
             href="/"
-            className="font-mono text-xs uppercase tracking-wider mr-4 hover:opacity-70 transition-opacity"
+            className="font-mono text-sm uppercase tracking-wider mr-4 hover:opacity-70 transition-opacity leading-none"
           >
             <span className={isHome ? 'text-[var(--color-nav-active)]' : 'text-[var(--color-text)]'}>
               RW
             </span>
           </Link>
 
-          <span className="text-[var(--color-muted)] mr-3">//</span>
+          {/* Desktop nav items */}
+          <span className="hidden md:inline text-[var(--color-muted)] mr-3">//</span>
 
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.href);
@@ -80,7 +118,7 @@ export function SiteNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="font-mono text-xs uppercase tracking-wider px-2 py-1 text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors duration-150"
+                className="hidden md:inline font-mono text-xs uppercase tracking-wider px-2 py-1 text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors duration-150"
               >
                 <span className={active ? 'text-[var(--color-nav-active)]' : 'opacity-50'}>
                   [{item.key}]
@@ -91,15 +129,69 @@ export function SiteNav() {
           })}
         </div>
 
-        {/* Right: Agent Button */}
-        <button
-          onClick={() => window.dispatchEvent(new Event('toggle-agent'))}
-          className="font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-text)] text-[var(--color-text)] hover:bg-[var(--color-text)] hover:text-[var(--color-bg)] transition-colors duration-150"
-        >
-          <span className="opacity-50">[A]</span>
-          <span className="ml-1">Agent</span>
-        </button>
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          {/* Desktop: Agent Button */}
+          <button
+            onClick={() => window.dispatchEvent(new Event('toggle-agent'))}
+            className="hidden md:block font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-text)] text-[var(--color-text)] hover:bg-[var(--color-text)] hover:text-[var(--color-bg)] transition-colors duration-150"
+          >
+            <span className="opacity-50">[A]</span>
+            <span className="ml-1">Agent</span>
+          </button>
+
+          {/* Mobile: Hamburger */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-[var(--color-text)]"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12h18M3 6h18M3 18h18" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-[var(--color-border)] bg-[var(--color-bg)]">
+          <div className="px-6 py-4 space-y-3">
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block font-mono text-sm uppercase tracking-wider text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors duration-150"
+                >
+                  <span className={active ? 'text-[var(--color-nav-active)]' : 'opacity-50'}>
+                    [{item.key}]
+                  </span>
+                  <span className="ml-2">{item.label}</span>
+                </Link>
+              );
+            })}
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                window.dispatchEvent(new Event('toggle-agent'));
+              }}
+              className="block font-mono text-sm uppercase tracking-wider text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors duration-150"
+            >
+              <span className="opacity-50">[A]</span>
+              <span className="ml-2">Agent</span>
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
