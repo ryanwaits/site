@@ -8,15 +8,19 @@ export const metadata = {
   },
 };
 
-<AnimatedName date="December 2025" />
+<AnimatedName date="January 2026" />
 
 # From 2000 Lines to 100
 
-doccov started as a CLI. 2000 lines of TypeScript encoding human judgment about documentation quality.
+This is the project I teased in ["Features Don't Compose"](/n/features-dont-compose).
 
-What counted as "documented"? How much drift was acceptable? When should a warning become an error? All encoded in code. All opinions frozen into if-statements.
+doccov started as a CLI. 2000 lines of TypeScript. Months of work building what I thought would be the first real product on top of [OpenPKG](/n/how-does-this-not-exist) — a tool that could measure documentation coverage, catch drift, flag what's missing.
 
-Then the realization: that's not logic. That's _judgment_. And judgment is what LLMs do.
+It worked. But something felt off. Overengineered in a way I couldn't articulate.
+
+Then I read the ["Agent-Native Architecture"](https://blog.val.town/blog/agent-native/) guide, and it clicked immediately. All those if-statements deciding what counted as "documented"? What level of drift was acceptable? When a warning should become an error?
+
+That's not logic. That's judgment. And judgment is what LLMs do.
 
 ## The deletion
 
@@ -24,45 +28,20 @@ The entire doccov CLI reduced to a question: given an API surface and its docume
 
 That question doesn't need 2000 lines. It needs a prompt.
 
-So we deleted the CLI. Wrote a skill file instead — `~/.claude/skills/drift.md`. About 100 lines of prose explaining:
-
-- What openpkg primitives exist
-- How to compose them for doc-sync workflows
-- What to look for (missing exports, stale examples, naming drift)
-- How to report findings
+So I deleted the CLI. Wrote a skill file instead — about 100 lines of prose explaining what openpkg primitives exist, how to compose them, what to look for, how to report findings.
 
 No code. No releases. No maintenance.
 
-## What the skill does
+It felt a little sad — months of work, gone. But it also felt right. The overengineering finally had an explanation: I'd been encoding judgment in code when it belonged in prose.
 
-The skill teaches agents recipes:
+## What it enables
 
-**Find stale documentation:**
-1. `openpkg diff old.json new.json`
-2. Grep for changed export names in docs/
-3. Read matching files
-4. Report what's outdated
+The skill doesn't just do what the CLI did. It does things I never built features for. No feature request. No code change. Just a different prompt.
 
-**Pre-release audit:**
-1. `openpkg snapshot` current state
-2. `openpkg diff` against last release
-3. For each breaking change, verify docs mention it
-4. Report gaps
-
-Same primitives, different compositions. New workflow? Write a new recipe. Ship nothing.
-
-## What it found
-
-The skill found issues the CLI couldn't:
-
-- **Semantic drift** — docs said `model`, code said `modelId`
-- **Outdated examples** — code that compiled but used deprecated patterns
-- **Naming inconsistencies** — parameter called `config` in docs, `options` in code
-
-Static analysis can't catch these. An LLM reading both surfaces can.
+That's the point. The CLI could only do what I explicitly built. The skill can do whatever the primitives allow — which turns out to be a lot more.
 
 ## The principle
 
-The doccov CLI encoded judgment in code. The drift skill encodes judgment in prose. Same capability, 95% less maintenance.
+2000 lines of judgment encoded in code. 100 lines of judgment encoded in prose. Same capability, 95% less maintenance.
 
-New features = new prompts, not new code. The best CLI is no CLI.
+New features = new prompts, not new code.

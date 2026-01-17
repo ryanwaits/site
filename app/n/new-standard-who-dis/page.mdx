@@ -2,7 +2,7 @@ import { AnimatedName } from '../animated-name.tsx';
 
 export const metadata = {
   title: 'New Standard, Who Dis?',
-  description: 'Standard Schema shipped. Runtime extraction just got universal.',
+  description: 'Standard JSON Schema shipped. Runtime extraction just got universal.',
   alternates: {
     canonical: '/n/new-standard-who-dis',
   },
@@ -12,30 +12,70 @@ export const metadata = {
 
 # New Standard, Who Dis?
 
-Static type analysis can only get you so far.
+I made a bet early on: if I wanted [OpenPKG](/work/openpkg) to be adopted, I should build on existing standards. JSON Schema (2020-12) for type representation. Not something custom.
 
-openpkg extracts API surfaces from TypeScript packages — exports, signatures, types. For most code, the TypeScript compiler API gives accurate results. But validation schemas are different.
+That bet paid off faster than I expected.
 
-A Zod schema like `z.string().email().min(5)` compiles to a TypeScript type of `string`. The constraints — email format, minimum length — exist only at runtime. Static analysis can't see them.
+The trigger was working with Zod and other schema libraries. Static analysis could extract the basic types — `string`, `number`, `object` — but missed everything that made those schemas useful. An email field? Just `string`. An age with min/max bounds? Just `number`. The constraints existed only at runtime.
 
-Then [Standard Schema](https://standardschema.dev/) dropped.
+So I started building plugins. Manual adapters for popular schema libraries — Zod, Valibot, ArkType, TypeBox — to extract constraints and merge them into the spec. It worked, but it was brittle. Every library update could break it. I hated the idea of maintaining it.
 
-## The problem
+Then [Standard JSON Schema](https://standardschema.dev/) shipped.
 
-Validation libraries define rich schemas: string formats, numeric ranges, custom refinements. But each library has its own API:
+## The problem, visualized
 
-- Zod: `z.string().email()`
-- Valibot: `v.pipe(v.string(), v.email())`
-- ArkType: `type("string.email")`
+Take a typical Zod schema:
 
-Tools that want to extract schemas need library-specific adapters. Every new validation library means new code. The ecosystem fragments.
+```typescript
+import { z } from 'zod';
+
+export const UserSchema = z.object({
+  email: z.string().email(),
+  age: z.number().min(18).max(120),
+  username: z.string().min(3).max(20),
+});
+```
+
+**Static analysis** extracts the basic shape:
+
+```json
+{
+  "schema": {
+    "properties": {
+      "email": { "type": "string" },
+      "age": { "type": "number" },
+      "username": { "type": "string" }
+    },
+    "required": ["email", "age", "username"]
+  }
+}
+```
+
+The shape is right. But the constraints — email format, min/max values, length limits — exist only at runtime. Static analysis can't see them.
+
+**Runtime introspection** calls the schema directly and extracts the actual constraints:
+
+```json
+{
+  "schema": {
+    "properties": {
+      "email": { "type": "string", "format": "email" },
+      "age": { "type": "number", "minimum": 18, "maximum": 120 },
+      "username": { "type": "string", "minLength": 3, "maxLength": 20 }
+    },
+    "required": ["email", "age", "username"],
+    "additionalProperties": false
+  }
+}
+```
+
+Email format. Numeric ranges. Length constraints. `additionalProperties: false`. Everything a developer — or an LLM — needs to understand how to actually use the code.
 
 ## The spec
 
-Standard Schema defines a common interface. Any library can implement `~standard.jsonSchema.output()` to return JSON Schema:
+Standard JSON Schema gives validation libraries a common interface for runtime introspection. Any compatible library can expose its constraints as JSON Schema:
 
 ```typescript
-// Works for Zod, Valibot, ArkType, TypeBox...
 const jsonSchema = schema['~standard'].jsonSchema.output({
   target: 'draft-2020-12'
 });
@@ -43,60 +83,22 @@ const jsonSchema = schema['~standard'].jsonSchema.output({
 
 One interface. Every library. No adapters.
 
-## What openpkg does now
+## Using it
 
-The `--runtime` flag enables Standard Schema extraction:
-
-```bash
-openpkg snapshot src/index.ts --runtime
-```
-
-This:
-
-1. Detects available TypeScript runtimes (bun, tsx, Node 22+)
-2. Executes the entry file in a subprocess
-3. Finds exports implementing `StandardJSONSchemaV1`
-4. Calls `~standard.jsonSchema.output()` on each
-5. Merges runtime schemas with static type analysis
-
-The output includes which vendor provided each schema:
-
-```json
-{
-  "name": "UserSchema",
-  "schema": {
-    "type": "object",
-    "properties": {
-      "email": { "type": "string", "format": "email" }
-    }
-  },
-  "tags": [
-    { "name": "vendor", "text": "zod" },
-    { "name": "schema-source", "text": "standard-json-schema" }
-  ]
-}
-```
-
-Static analysis would've given `{ "type": "object" }`. Runtime extraction gives the full picture.
-
-## Hybrid mode
-
-The default is _hybrid_ — merge runtime schemas with static analysis. This catches:
-
-- Validation schemas → rich JSON Schema from runtime
-- Plain types → accurate schema from static analysis
-- Mixed exports → best of both
+Detect if a package uses a Standard JSON Schema-compatible library, run with `--runtime`, and get the full picture:
 
 ```bash
-# Just static (fast, no execution)
-openpkg snapshot src/index.ts
+# Static only (fast, no execution)
+npx @openpkg-ts/cli snapshot src/index.ts
 
-# Hybrid (static + runtime for validation schemas)
-openpkg snapshot src/index.ts --runtime
+# With runtime introspection
+npx @openpkg-ts/cli snapshot src/index.ts --runtime
 ```
 
-## The timing
+`openpkg` detects available TypeScript runtimes (bun, tsx, Node 22+), executes the entry file, finds Standard JSON Schema-compatible exports, and merges the runtime schemas with static analysis.
 
-Standard Schema shipped in late 2025. openpkg had already chosen JSON Schema as its output format. When the spec dropped, integration was straightforward — the output format already matched what the spec produces.
+## The lesson
+
+Standard JSON Schema shipped in late 2025. `openpkg` had already chosen JSON Schema as its output format. When the spec dropped, integration was straightforward — the output format already matched.
 
 Pick a standard. When the ecosystem catches up, you're ready.

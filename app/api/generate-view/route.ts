@@ -47,9 +47,7 @@ const VIEW_SYSTEM_PROMPT = `You generate MDX views for Ryan Waits' personal webs
 ## Writings (at /n/[slug])
 - /n/2000-to-100 - From 2000 Lines to 100 (deleted 95% of codebase, tool got better)
 - /n/features-dont-compose - Features Don't Compose (agents need surfaces, not features)
-- /n/new-standard-who-dis - New Standard, Who Dis? (Standard Schema, runtime extraction)
-- /n/json-schema-contract - Pick a Standard, Extend Carefully (standards are leverage)
-- /n/codecov-but-for-docs - Codecov, But for Docs (doc coverage tooling gap)
+- /n/new-standard-who-dis - New Standard, Who Dis? (Standard JSON Schema, runtime extraction)
 - /n/how-does-this-not-exist - How Does This Not Exist? (TypeScript packages have no OpenAPI equivalent)
 
 ## Available MDX Components

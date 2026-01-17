@@ -2,12 +2,16 @@
 
 import { usePathname } from 'next/navigation';
 import { PostNavigation } from './post-navigation';
-import { getPostNavigation } from './posts';
+import { getPostNavigation, type Post } from './posts';
 
-export function PostNavigationWrapper() {
+interface PostNavigationWrapperProps {
+  posts: Post[];
+}
+
+export function PostNavigationWrapper({ posts }: PostNavigationWrapperProps) {
   const pathname = usePathname();
   const slug = pathname?.replace('/n/', '') || '';
-  const { prev, next } = getPostNavigation(slug);
+  const { prev, next } = getPostNavigation(posts, slug);
 
   return <PostNavigation prev={prev} next={next} />;
 }

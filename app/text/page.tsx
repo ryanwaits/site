@@ -1,19 +1,11 @@
-'use client'
-
 import Link from 'next/link'
 import { SiteNav } from '../components/site-nav'
 import { SiteFooter } from '../components/site-footer'
+import { getPosts } from '../n/posts.server'
 
-const TEXT = [
-  { title: 'From 2000 Lines to 100', date: 'December 2025', description: 'Deleted 95% of the codebase. The tool got better.', slug: '/n/2000-to-100' },
-  { title: "Features Don't Compose", date: 'December 2025', description: "The agent doesn't need your features — it needs your surfaces.", slug: '/n/features-dont-compose' },
-  { title: 'New Standard, Who Dis?', date: 'December 2025', description: 'Standard Schema shipped. Runtime extraction just got universal.', slug: '/n/new-standard-who-dis' },
-  { title: 'Pick a Standard, Extend Carefully', date: 'December 2025', description: 'Custom formats are a trap. Standards are leverage.', slug: '/n/json-schema-contract' },
-  { title: 'Codecov, But for Docs', date: 'October 2025', description: 'Code coverage has tooling. Documentation coverage? Nothing.', slug: '/n/codecov-but-for-docs' },
-  { title: 'How Does This Not Exist?', date: 'October 2025', description: 'REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.', slug: '/n/how-does-this-not-exist' },
-]
+export default async function TextPage() {
+  const posts = await getPosts()
 
-export default function TextPage() {
   return (
     <div className="h-screen flex flex-col bg-[var(--color-bg)]">
       <SiteNav />
@@ -25,14 +17,14 @@ export default function TextPage() {
               text
             </h2>
             <span className="font-mono text-xs text-[var(--color-muted)]">
-              ({TEXT.length})
+              ({posts.length})
             </span>
           </div>
 
           <section className="space-y-6">
-            {TEXT.map((post, i) => (
-              <article key={i}>
-                <Link href={post.slug} className="group block">
+            {posts.map((post) => (
+              <article key={post.slug}>
+                <Link href={`/n/${post.slug}`} className="group block">
                   <time className="font-mono text-xs uppercase tracking-wider text-[var(--color-muted)] block mb-1">
                     {post.date}
                   </time>

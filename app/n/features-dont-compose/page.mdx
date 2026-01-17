@@ -8,17 +8,21 @@ export const metadata = {
   },
 };
 
-<AnimatedName date="December 2025" />
+<AnimatedName date="January 2026" />
 
 # Features Don't Compose
 
-openpkg started with compound commands: `coverage`, `audit`, `report`. Feature-rich. Helpful defaults. The kind of CLI developers expect.
+I'd been circling something for weeks. Building toward it without being able to name it. You know the feeling — you sense the shape of an idea, you're making decisions that point toward it, but you can't articulate why.
 
-Then the refactor.
+Then I read ["Agent-Native Architecture"](https://blog.val.town/blog/agent-native/) and it clicked.
 
-Those compound commands were just compositions of simpler operations. `coverage` was really `list` + `get` + compare to docs. `audit` was `snapshot` + `diff`. Every "feature" decomposed into the same five primitives.
+> "Prefer atomic primitives. Features are outcomes achieved by an agent in a loop."
 
-So we deleted the features. Kept the primitives:
+[OpenPKG](/n/how-does-this-not-exist) had compound commands: `coverage`, `audit`, `report`. Feature-rich. Helpful defaults. The kind of CLI developers expect.
+
+But those compound commands were just compositions of simpler operations. `coverage` was really `list` + `get` + compare to docs. `audit` was `snapshot` + `diff`. Every "feature" decomposed into the same five primitives.
+
+So I deleted the features. Kept the primitives:
 
 ```bash
 openpkg list ./src/index.ts          # list exports
@@ -30,29 +34,10 @@ openpkg docs spec.json               # generate markdown
 
 Five commands. Everything else is composition.
 
-## The pressure to add
+The article had a test: "To change behavior, do you edit prose or refactor code?" If the answer is refactor code, you've bundled logic that belongs in prompts.
 
-Once you have primitives, the pressure starts:
+I started thinking about it like gardening. I was trying to build flowers — specific features, specific outcomes. What I should be doing is cultivating the environment where flowers can grow. Build the primitives. Let the prompts do the composing.
 
-- "Add an MCP server so agents can call these"
-- "Build a CLI wrapper for common workflows"
-- "Add a `--watch` mode"
-- "Integrate with GitHub Actions directly"
+This realization hit harder when I looked at another project I'd been building on top of openpkg. A lot of complex logic. A lot of features encoded in code. Turns out, everything it did could be achieved by composing the primitives I already had — with prompts, not code.
 
-All reasonable requests. All rejected.
-
-## Why not
-
-Primitives compose. Features don't.
-
-An MCP server is a feature. It encodes assumptions about how agents should interact. A CLI wrapper encodes assumptions about workflows. Both add surface area to maintain. Both constrain how others can build on top.
-
-The agent doesn't need your features — it needs your _surfaces_. Give it `list`, `get`, `diff`. Let it compose them however the task requires. Today's workflow might be "check if docs match code." Tomorrow's might be "generate changelog from last release." Same primitives, different composition.
-
-Features age. Primitives don't.
-
-## The test
-
-When someone asks for a new feature, ask: is this a new primitive, or a composition of existing ones?
-
-If it's a composition, write a prompt instead of code. Teach the agent the recipe. Ship nothing.
+More on that soon.

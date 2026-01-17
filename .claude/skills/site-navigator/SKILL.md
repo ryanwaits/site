@@ -19,8 +19,6 @@ Help users discover and navigate Ryan's site content.
     ├── /n/2000-to-100 - From 2000 Lines to 100
     ├── /n/features-dont-compose - Features Don't Compose
     ├── /n/new-standard-who-dis - New Standard, Who Dis?
-    ├── /n/json-schema-contract - Pick a Standard, Extend Carefully
-    ├── /n/codecov-but-for-docs - Codecov, But for Docs
     └── /n/how-does-this-not-exist - How Does This Not Exist?
 ```
 

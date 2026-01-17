@@ -12,39 +12,61 @@ export const metadata = {
 
 # How Does This Not Exist?
 
-Six APIs. Eight packages. Zero documentation on most of them.
+Whenever I have an idea for something, my first instinct is "someone must have already solved this." Imposter syndrome, maybe. Or maybe there's a reason it doesn't exist.
 
-That was the situation at Hiro — a developer platform with multiple products, each with its own SDK, each with different maintainers, each with documentation that ranged from "outdated" to "nonexistent."
+I inherited 10+ packages with documentation that ranged from outdated to nonexistent. My job was to fix it — turn it into something digestible, complete, actually useful.
 
-REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.
+TypeDoc was already in place in some cases. But generic HTML output didn't match our brand, overwhelming with data and impossible to navigate. It was technically "documentation" but nobody could use it effectively.
 
-## The search
+Managing this manually wasn't going to work. I needed something that could start from source code, extract the details, and let me build custom views on top. Not a docs site — a spec.
 
-The obvious first stop: [TypeDoc](https://typedoc.org/). It generates documentation from TypeScript — HTML by default, JSON with `--json`. The problem? The JSON output isn't a _spec_, it's a document tree. Type references don't resolve. Destructured parameters lose structure. Complex generics flatten into strings.
+To be fair — the existing tools get close. TypeDoc is really good for generating docs, but it's more of a document than a spec. Type refs don't resolve, destructured params lose structure, generics flatten into strings. API Extractor is closer to an API surface spec, but the DX is a big turnoff and comes with more features than I need.
 
-Want to answer "what changed between v1 and v2"? Want to feed your API surface to an LLM? The output fights you.
+REST APIs have OpenAPI. GraphQL has introspection. What does TypeScript have?
 
-Next: [API Extractor](https://api-extractor.com/) from Microsoft. Closer — it generates `.api.json` reports. But it's designed for monorepo rollup summaries, not standalone package specs. The format is Microsoft-specific. And it requires full build pipeline integration just to run.
+No standard for "here's every export, its signature, its types, its JSDoc." No way to diff versions to measure breaking changes. No structured output you can feed to an LLM or build tooling around.
 
-Neither tool answers the simple question: "What is the public API surface of this package, in a format machines can consume?"
+A package spec should be simple: list every public export, capture full type information, output JSON, work standalone. One command. No build pipeline required.
 
-## The gap
+So I'm building it.
 
-OpenAPI solved this for REST. A JSON/YAML spec describing every endpoint, parameter, and response type. Tooling emerged around it — documentation generators, SDK builders, diff tools, linters.
+Introducing [OpenPKG](/work/openpkg) - an OpenAPI-style spec for TypeScript packages.
 
-TypeScript has nothing equivalent. No standard for "here's every export, its signature, its types, its JSDoc."
+```ts
+/** Creates a new client */
+export function createClient(config: { baseUrl: string }): void {}
+```
 
-How does this not exist?
+```bash
+npx @openpkg-ts/cli snapshot src/index.ts
+```
 
-A package spec should:
+```json
+{
+  "openpkg": "0.4.0",
+  "exports": [
+    {
+      "name": "createClient",
+      "kind": "function",
+      "description": "Creates a new client",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "config",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "baseUrl": { "type": "string" }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
 
-1. List every public export
-2. Capture full type information — not compiler-optimized declarations
-3. Output structured JSON
-4. Work standalone — no build pipeline required
-
-At Hiro, this would've meant: one command across eight packages, one source of truth, a way to know when docs fell behind.
-
-The tooling gap exists because most people maintain one package. Six APIs and eight packages surface problems that one never will.
-
-So — time to build it.
+One command. Structured JSON Schema (2020-12). Every export, every signature, every type,every JSDoc — referenced and extracted and ready for whatever you want to build on top.

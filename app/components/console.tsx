@@ -6,7 +6,7 @@ import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import { serialize } from 'next-mdx-remote/serialize'
 import { highlight } from 'sugar-high'
 import { viewComponents } from './view-components'
-import { posts } from '@/app/n/posts'
+import type { Post } from '@/app/n/posts'
 
 interface ViewData {
   title: string
@@ -304,6 +304,15 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [typeaheadIndex, setTypeaheadIndex] = useState(0)
   const [mentionTypeaheadIndex, setMentionTypeaheadIndex] = useState(0)
+  const [posts, setPosts] = useState<Post[]>([])
+
+  // Fetch posts for @mention autocomplete
+  useEffect(() => {
+    fetch('/api/posts')
+      .then(res => res.json())
+      .then(setPosts)
+      .catch(() => {})
+  }, [])
 
   // Compute filtered commands for typeahead
   const showTypeahead = input.startsWith('/') && !input.includes(' ')
