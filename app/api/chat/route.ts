@@ -1,6 +1,6 @@
-import { query, HookCallback, PreToolUseHookInput } from '@anthropic-ai/claude-agent-sdk'
-import path from 'path'
-import fs from 'fs/promises'
+import { query, type HookCallback, type PreToolUseHookInput } from '@anthropic-ai/claude-agent-sdk';
+import path from 'node:path';
+import fs from 'node:fs/promises'
 import { getPosts } from '@/app/n/posts.server'
 
 // Security hook: restrict file reads to project directory only
@@ -24,7 +24,7 @@ const restrictFileAccess: HookCallback = async (input) => {
       hookSpecificOutput: {
         hookEventName: input.hook_event_name,
         permissionDecision: 'deny',
-        permissionDecisionReason: `Access denied: cannot read files outside project directory`
+        permissionDecisionReason: 'Access denied: cannot read files outside project directory'
       }
     }
   }
@@ -36,7 +36,7 @@ const restrictFileAccess: HookCallback = async (input) => {
       hookSpecificOutput: {
         hookEventName: input.hook_event_name,
         permissionDecision: 'deny',
-        permissionDecisionReason: `Access denied: cannot read environment files`
+        permissionDecisionReason: 'Access denied: cannot read environment files'
       }
     }
   }
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
 
         for await (const msg of q) {
           if (msg.type === 'system' && 'subtype' in msg && msg.subtype === 'init') {
-            console.log('Available commands:', (msg as { slash_commands?: string[] }).slash_commands)
+            // console.log('Available commands:', (msg as { slash_commands?: string[] }).slash_commands)
             // Signal thinking state starts
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'thinking' })}\n\n`))
           }
@@ -212,7 +212,7 @@ export async function POST(request: Request) {
                   activity = {
                     kind: 'tool',
                     tool: 'Reading',
-                    detail: String(toolInput.file_path || '').replace(process.cwd() + '/', ''),
+                    detail: String(toolInput.file_path || '').replace(`${process.cwd()}/`, ''),
                   }
                 } else if (toolName === 'Skill') {
                   activity = {
