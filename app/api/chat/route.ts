@@ -1,50 +1,24 @@
-import { query, type HookCallback, type PreToolUseHookInput } from '@anthropic-ai/claude-agent-sdk';
-import path from 'node:path';
-import fs from 'node:fs/promises'
+import { Sandbox } from '@vercel/sandbox'
+import { cookies } from 'next/headers'
 import { getPosts } from '@/app/n/posts.server'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
-// Security hook: restrict file reads to project directory only
-const restrictFileAccess: HookCallback = async (input) => {
-  if (input.hook_event_name !== 'PreToolUse') return {}
+// Session storage for sandbox IDs (resets on cold start, which is fine)
+const sandboxSessions = new Map<string, { sandboxId: string; lastUsed: number }>()
 
-  const preInput = input as PreToolUseHookInput
-  if (preInput.tool_name !== 'Read') return {}
-
-  const toolInput = preInput.tool_input as Record<string, unknown>
-  const filePath = toolInput?.file_path as string
-  if (!filePath) return {}
-
-  const projectRoot = process.cwd()
-  const resolved = path.resolve(filePath)
-
-  // Block access outside project directory
-  if (!resolved.startsWith(projectRoot)) {
-    console.log(`[SECURITY] Blocked read outside project: ${filePath}`)
-    return {
-      hookSpecificOutput: {
-        hookEventName: input.hook_event_name,
-        permissionDecision: 'deny',
-        permissionDecisionReason: 'Access denied: cannot read files outside project directory'
-      }
+// Cleanup old sessions periodically
+function cleanupSessions() {
+  const now = Date.now()
+  const timeout = 6 * 60 * 1000 // 6 min (slightly longer than sandbox timeout)
+  for (const [key, value] of sandboxSessions.entries()) {
+    if (now - value.lastUsed > timeout) {
+      sandboxSessions.delete(key)
     }
   }
-
-  // Also block .env files
-  if (resolved.endsWith('.env') || resolved.includes('.env.')) {
-    console.log(`[SECURITY] Blocked read of env file: ${filePath}`)
-    return {
-      hookSpecificOutput: {
-        hookEventName: input.hook_event_name,
-        permissionDecision: 'deny',
-        permissionDecisionReason: 'Access denied: cannot read environment files'
-      }
-    }
-  }
-
-  return {}
 }
 
-// Read post content by slug
+// Read post content by slug (for @mentions)
 async function getPostContent(slug: string): Promise<string | null> {
   try {
     const filePath = path.join(process.cwd(), 'app', 'n', slug, 'page.mdx')
@@ -134,6 +108,63 @@ Don't overshare. When asked personal questions:
 - "Tell me about yourself" → hit highlights, invite follow-up
 `
 
+async function getOrCreateSandbox(sessionId: string): Promise<Sandbox> {
+  cleanupSessions()
+
+  const existing = sandboxSessions.get(sessionId)
+
+  // Try to reconnect to existing sandbox
+  if (existing) {
+    try {
+      const sandbox = await Sandbox.get({
+        sandboxId: existing.sandboxId,
+        teamId: process.env.VERCEL_TEAM_ID,
+        projectId: process.env.VERCEL_PROJECT_ID,
+        token: process.env.VERCEL_TOKEN,
+      })
+      // Check if sandbox is still running
+      if (sandbox.status === 'running') {
+        sandboxSessions.set(sessionId, { sandboxId: existing.sandboxId, lastUsed: Date.now() })
+        console.log(`[Sandbox] Reconnected to ${existing.sandboxId}`)
+        return sandbox
+      }
+      // Sandbox not running, will create new one
+      sandboxSessions.delete(sessionId)
+      console.log(`[Sandbox] Previous sandbox not running (${sandbox.status}), creating new`)
+    } catch {
+      // Sandbox expired or error, will create new one
+      sandboxSessions.delete(sessionId)
+      console.log(`[Sandbox] Previous sandbox expired, creating new`)
+    }
+  }
+
+  // Create new sandbox with git repo
+  console.log(`[Sandbox] Creating new sandbox for session ${sessionId}`)
+  const sandbox = await Sandbox.create({
+    teamId: process.env.VERCEL_TEAM_ID,
+    projectId: process.env.VERCEL_PROJECT_ID,
+    token: process.env.VERCEL_TOKEN,
+    source: {
+      url: 'https://github.com/ryanwaits/site.git',
+      type: 'git',
+    },
+    timeout: 5 * 60 * 1000, // 5 min idle timeout
+    runtime: 'node24',
+  })
+
+  // Install Claude Code CLI
+  console.log(`[Sandbox] Installing Claude Code CLI`)
+  await sandbox.runCommand({
+    cmd: 'npm',
+    args: ['install', '-g', '@anthropic-ai/claude-code'],
+  })
+
+  sandboxSessions.set(sessionId, { sandboxId: sandbox.sandboxId, lastUsed: Date.now() })
+  console.log(`[Sandbox] Created ${sandbox.sandboxId}`)
+
+  return sandbox
+}
+
 export async function POST(request: Request) {
   let body: { message?: unknown; history?: unknown; mentions?: unknown }
   try {
@@ -155,6 +186,13 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid mentions' }, { status: 400 })
   }
 
+  // Get or create session ID
+  const cookieStore = await cookies()
+  let sessionId = cookieStore.get('agent-session')?.value
+  if (!sessionId) {
+    sessionId = crypto.randomUUID()
+  }
+
   const posts = await getPosts()
 
   // Load content for any @mentions
@@ -173,17 +211,16 @@ export async function POST(request: Request) {
     mentionContext = mentionContents.filter(Boolean).join('')
   }
 
-  // Build prompt with conversation history for context
-  let fullPrompt = message
-  if (history.length > 0) {
-    const historyText = history
-      .filter((m: { role: string; content: string }) => !m.content.includes('Generating custom view'))
-      .map((m: { role: string; content: string }) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+  // Build prompt with conversation history
+  let fullPrompt = message as string
+  if ((history as Array<{ role: string; content: string }>).length > 0) {
+    const historyText = (history as Array<{ role: string; content: string }>)
+      .filter((m) => !m.content.includes('Generating custom view'))
+      .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
       .join('\n\n')
     fullPrompt = `Previous conversation:\n${historyText}\n\nCurrent request: ${message}`
   }
 
-  // Append mention context if any
   if (mentionContext) {
     fullPrompt += `\n\nThe user has referenced the following writing(s) for context:${mentionContext}`
   }
@@ -192,93 +229,118 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const q = query({
-          prompt: fullPrompt,
-          options: {
-            model: 'claude-sonnet-4-20250514',
-            systemPrompt: SYSTEM_PROMPT,
-            maxTurns: 3,
-            cwd: process.cwd(),
-            settingSources: ['project'], // Load project .claude/ only (skills, commands)
-            allowedTools: ['Read', 'Skill'], // Enable Read for content access, Skill for project skills
-            disallowedTools: ['Bash', 'Edit', 'Write', 'Glob', 'Grep', 'Task'], // Keep dangerous tools disabled
-            hooks: {
-              PreToolUse: [{ matcher: 'Read', hooks: [restrictFileAccess] }]
-            },
+        // Signal thinking state
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'thinking' })}\n\n`))
+
+        // Get or create sandbox
+        const sandbox = await getOrCreateSandbox(sessionId!)
+
+        // Write system prompt to temp file
+        const systemPromptPath = '/tmp/system-prompt.txt'
+        await sandbox.writeFiles([{
+          path: systemPromptPath,
+          content: Buffer.from(SYSTEM_PROMPT),
+        }])
+
+        // Run Claude with streaming JSON output
+        const result = await sandbox.runCommand({
+          cmd: 'claude',
+          args: [
+            '--output-format', 'stream-json',
+            '--system-prompt', systemPromptPath,
+            '--max-turns', '3',
+            '--allowedTools', 'Read,Skill',
+            '--disallowedTools', 'Bash,Edit,Write,Glob,Grep,Task',
+            '--dangerously-skip-permissions',
+            '--print',
+            fullPrompt,
+          ],
+          env: {
+            ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY!,
           },
         })
 
+        // Parse streaming JSON output
+        const output = await result.stdout()
+        const lines = output.split('\n').filter(line => line.trim())
+
         let hasStartedResponse = false
 
-        for await (const msg of q) {
-          if (msg.type === 'system' && 'subtype' in msg && msg.subtype === 'init') {
-            // console.log('Available commands:', (msg as { slash_commands?: string[] }).slash_commands)
-            // Signal thinking state starts
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'thinking' })}\n\n`))
-          }
+        for (const line of lines) {
+          try {
+            const event = JSON.parse(line)
 
-          if (msg.type === 'assistant') {
-            // Process all content blocks
-            for (const block of msg.message.content) {
-              if (block.type === 'tool_use') {
-                // Stream tool use events
-                const toolName = block.name
-                const toolInput = block.input as Record<string, unknown>
+            if (event.type === 'assistant' && event.message?.content) {
+              for (const block of event.message.content) {
+                if (block.type === 'tool_use') {
+                  const toolName = block.name
+                  const toolInput = block.input as Record<string, unknown>
 
-                let activity: { kind: string; tool: string; detail?: string }
+                  let activity: { kind: string; tool: string; detail?: string }
 
-                if (toolName === 'Read') {
-                  activity = {
-                    kind: 'tool',
-                    tool: 'Reading',
-                    detail: String(toolInput.file_path || '').replace(`${process.cwd()}/`, ''),
+                  if (toolName === 'Read') {
+                    activity = {
+                      kind: 'tool',
+                      tool: 'Reading',
+                      detail: String(toolInput.file_path || '').replace(/^\/vercel\/sandbox\//, ''),
+                    }
+                  } else if (toolName === 'Skill') {
+                    activity = {
+                      kind: 'skill',
+                      tool: 'Using',
+                      detail: String(toolInput.skill || ''),
+                    }
+                  } else {
+                    activity = {
+                      kind: 'tool',
+                      tool: toolName,
+                    }
                   }
-                } else if (toolName === 'Skill') {
-                  activity = {
-                    kind: 'skill',
-                    tool: 'Using',
-                    detail: String(toolInput.skill || ''),
-                  }
-                } else {
-                  activity = {
-                    kind: 'tool',
-                    tool: toolName,
-                  }
+
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', ...activity })}\n\n`))
                 }
 
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', ...activity })}\n\n`))
-              }
-
-              if (block.type === 'text' && block.text) {
-                if (!hasStartedResponse) {
-                  hasStartedResponse = true
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
+                if (block.type === 'text' && block.text) {
+                  if (!hasStartedResponse) {
+                    hasStartedResponse = true
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
+                  }
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
                 }
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
               }
             }
-          }
 
-          if (msg.type === 'result') {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
+            if (event.type === 'result') {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
+            }
+          } catch {
+            // Skip non-JSON lines
           }
+        }
+
+        // Ensure we send done if we processed any text
+        if (hasStartedResponse) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
         }
 
         controller.close()
       } catch (error) {
         console.error('Chat error:', error)
-        // Don't leak error details to client
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`))
         controller.close()
       }
     },
   })
 
-  return new Response(stream, {
+  // Set session cookie in response
+  const response = new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      'Set-Cookie': `agent-session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`,
     },
   })
+
+  return response
 }
