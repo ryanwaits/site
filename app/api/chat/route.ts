@@ -170,63 +170,100 @@ export async function POST(request: Request) {
           systemPrompt: SYSTEM_PROMPT,
         }
 
-        // Run the agent using the SDK inside the sandbox
-        console.log(`[Sandbox] Running agent`)
-        const result = await sandbox.runCommand({
+        // Run the agent in detached mode for real-time streaming
+        console.log(`[Sandbox] Running agent (detached)`)
+        const command = await sandbox.runCommand({
           cmd: 'node',
           args: ['agent-runner.js', JSON.stringify(config)],
           env: {
             ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY!,
           },
+          detached: true,
         })
 
-        const output = await result.stdout()
-        const stderr = await result.stderr()
-        const exitCode = result.exitCode
-
-        console.log(`[Agent] Exit code: ${exitCode}`)
-        if (stderr) {
-          console.log(`[Agent] Stderr: ${stderr.slice(0, 500)}`)
-        }
-
-        const lines = output.split('\n').filter(line => line.trim())
         let hasStartedResponse = false
+        let buffer = ''
 
-        for (const line of lines) {
-          try {
-            const msg = JSON.parse(line)
+        // Stream logs in real-time
+        for await (const log of command.logs()) {
+          if (log.stream === 'stderr') {
+            console.log(`[Agent stderr] ${log.data}`)
+            continue
+          }
 
+          // Buffer stdout and process complete lines
+          buffer += log.data
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || '' // Keep incomplete line in buffer
 
-            // Assistant is generating response
-            if (msg.type === 'assistant' && msg.message?.content) {
-              for (const block of msg.message.content) {
-                if (block.type === 'text' && block.text) {
-                  // Skip preamble text (assistant announcing tool use)
-                  const text = block.text.trim()
-                  const isPreamble = /^(I'll|I will|Let me|I'm going to|Using the|I can|I should)\b/i.test(text)
+          for (const line of lines) {
+            if (!line.trim()) continue
 
-                  if (!isPreamble) {
-                    if (!hasStartedResponse) {
-                      hasStartedResponse = true
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
+            try {
+              const msg = JSON.parse(line)
+
+              // Tool use - show activity in real-time
+              if (msg.type === 'assistant' && msg.message?.content) {
+                for (const block of msg.message.content) {
+                  if (block.type === 'tool_use') {
+                    const toolName = block.name
+                    const toolInput = block.input as Record<string, unknown>
+
+                    let activity: { kind: string; tool: string; detail?: string }
+
+                    if (toolName === 'Read') {
+                      activity = {
+                        kind: 'tool',
+                        tool: 'Reading',
+                        detail: String(toolInput.file_path || '').replace(/^\/vercel\/sandbox\//, ''),
+                      }
+                    } else if (toolName === 'Skill') {
+                      activity = {
+                        kind: 'skill',
+                        tool: 'Using',
+                        detail: String(toolInput.skill || ''),
+                      }
+                    } else {
+                      activity = {
+                        kind: 'tool',
+                        tool: toolName,
+                      }
                     }
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
+
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', ...activity })}\n\n`))
+                  }
+
+                  if (block.type === 'text' && block.text) {
+                    // Skip preamble text (assistant announcing tool use)
+                    const text = block.text.trim()
+                    const isPreamble = /^(I'll|I will|Let me|I'm going to|Using the|I can|I should)\b/i.test(text)
+
+                    if (!isPreamble) {
+                      if (!hasStartedResponse) {
+                        hasStartedResponse = true
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
+                      }
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
+                    }
                   }
                 }
               }
-            }
 
-            if (msg.type === 'result') {
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
+              if (msg.type === 'result') {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
+              }
+            } catch {
+              // Skip non-JSON lines
             }
-          } catch {
-            // Skip non-JSON lines
           }
         }
 
+        // Wait for command to finish
+        const result = await command.wait()
+        console.log(`[Agent] Exit code: ${result.exitCode}`)
+
         // Ensure we send done
         if (!hasStartedResponse) {
-          // No response was generated, send error
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'No response generated' })}\n\n`))
         }
 
