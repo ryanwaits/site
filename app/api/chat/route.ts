@@ -135,7 +135,26 @@ Don't overshare. When asked personal questions:
 `
 
 export async function POST(request: Request) {
-  const { message, history = [], mentions = [] } = await request.json()
+  let body: { message?: unknown; history?: unknown; mentions?: unknown }
+  try {
+    body = await request.json()
+  } catch {
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const { message, history = [], mentions = [] } = body
+
+  // Input validation
+  if (!message || typeof message !== 'string' || message.length > 4000) {
+    return Response.json({ error: 'Invalid message' }, { status: 400 })
+  }
+  if (!Array.isArray(history) || history.length > 20) {
+    return Response.json({ error: 'Invalid history' }, { status: 400 })
+  }
+  if (!Array.isArray(mentions) || mentions.some(m => typeof m !== 'string' || m.length > 100)) {
+    return Response.json({ error: 'Invalid mentions' }, { status: 400 })
+  }
+
   const posts = await getPosts()
 
   // Load content for any @mentions
@@ -248,7 +267,8 @@ export async function POST(request: Request) {
         controller.close()
       } catch (error) {
         console.error('Chat error:', error)
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: String(error) })}\n\n`))
+        // Don't leak error details to client
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`))
         controller.close()
       }
     },

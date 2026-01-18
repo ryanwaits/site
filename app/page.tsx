@@ -5,142 +5,73 @@ import { MarkdownRaw } from './components/markdown-raw'
 import { SiteNav } from './components/site-nav'
 import { SiteFooter } from './components/site-footer'
 
-// Raw markdown content using actual markdown syntax
-const MARKDOWN_CONTENT = `# FIELD REPORT RW-2025-001
+const MARKDOWN_CONTENT = `---
+title: Ryan Waits
+description: Product engineer building AI-native developer tools
+location: Austin, TX
+---
 
-SUBJECT: Ryan Waits — Product Engineer
-LOCATION: Austin, TX
-DATE: January 2025
-STATUS: Building AI-native developer tooling
+# Ryan Waits
+
+Product engineer. Building tools that make codebases machine-readable.
+
+Previously at [Hiro](https://hiro.so) building Bitcoin developer infrastructure (2020-2024).
+Now focused on the intersection of documentation and machine readability.
 
 ---
 
-## Mission Overview
+## Now
 
-Product engineer specializing in developer tools and AI-native workflows.
-Currently focused on the intersection of **documentation** and **machine readability**.
-Previously at Hiro building Bitcoin developer infrastructure (2021-2024).
+Building primitives for AI-native development. The agent doesn't need your
+features — it needs your surfaces.
 
-Core belief: The best developer tools disappear. They don't add features — they
-remove friction. The agent doesn't need your help. It needs your surfaces.
+**[openpkg](https://github.com/ryanwaits/openpkg)** — TypeScript API extraction.
+One command, structured JSON Schema output. OpenAPI for packages.
 
----
+**[doccov](https://github.com/ryanwaits/doccov)** — Documentation coverage.
+Codecov for docs. Started as 2000 lines of TypeScript, now 100 lines of prompts.
 
-## Current Focus
-
-### Primary Objective
-
-Building tools that make codebases machine-readable. Documentation coverage,
-API extraction, type-safe interfaces. The boring infrastructure that makes
-AI-native development possible.
-
-### Active Projects
-
-| Codename        | Status | Description                                    |
-|-----------------|--------|------------------------------------------------|
-| doccov          | MVP    | Documentation coverage analysis                |
-|                 |        | Codecov for docs. Measures how well your       |
-|                 |        | public APIs are documented.                    |
-| openpkg         | Stable | TypeScript API extraction                      |
-|                 |        | Extracts public API surface from any           |
-|                 |        | TypeScript package. Zero config.               |
-| secondlayer-cli | Stable | Clarity contract interfaces                    |
-|                 |        | Generate TypeScript types from Bitcoin         |
-|                 |        | smart contracts.                               |
-| chainhooks-mcp  | Active | MCP server for Chainhook integration           |
-|                 |        | Connect AI agents to Bitcoin event streams.    |
+**[chainhooks-mcp](https://github.com/ryanwaits/chainhooks-mcp)** — MCP server
+for Bitcoin event streams. Connect agents to on-chain data.
 
 ---
 
-## Employment History
+## Writing
 
-### Hiro Systems (2021 — 2024)
+**[From 2000 Lines to 100](/n/2000-to-100)** — Deleted 95% of doccov. Replaced
+code with prompts. The tool got better.
 
-**Product Engineer** — Developer Tools
+**[Features Don't Compose](/n/features-dont-compose)** — The agent doesn't need
+features. It needs primitives. Build surfaces, not workflows.
 
-Built and maintained developer tooling for Bitcoin ecosystem:
+**[New Standard, Who Dis?](/n/new-standard-who-dis)** — Standard JSON Schema
+shipped. Runtime extraction just got universal.
 
-- Clarinet: Local development environment for Clarity smart contracts
-- Chainhooks: Event streaming infrastructure for Bitcoin/Stacks
-- Documentation platform serving 50k+ monthly developers
-
-### Blockstack PBC (2019 — 2021)
-
-**Senior Engineer** — Platform
-
-Decentralized application platform. Authentication, storage, identity.
-Early Bitcoin L2 infrastructure.
-
-### Various Startups (2017 — 2019)
-
-**Software Engineer**
-
-Early-stage fintech. Payments, lending, compliance automation.
+**[How Does This Not Exist?](/n/how-does-this-not-exist)** — REST has OpenAPI.
+GraphQL has introspection. TypeScript packages have... nothing. Until now.
 
 ---
 
-## Recent Transmissions
+## Principles
 
-### December 2025
+1. **Simplicity over flexibility** — Every option is a decision. Most don't
+   need to be made.
 
-- **From 2000 Lines to 100** — Deleted 95% of the codebase. The tool got
-  better. Sometimes the best feature is the one you remove.
+2. **Standards over custom** — Proprietary formats are debt. Standards are
+   leverage.
 
-- **Features Don't Compose** — The agent doesn't need your features — it
-  needs your surfaces. Stop building for humans who read docs. Build for
-  machines that parse APIs.
+3. **Surfaces over features** — The best API doesn't need documentation.
+   Make the right thing obvious.
 
-- **New Standard, Who Dis?** — Standard Schema shipped. Runtime extraction
-  just got universal. One schema format to rule them all.
-
-- **Pick a Standard, Extend Carefully** — Custom formats are a trap.
-  Standards are leverage. Every proprietary format is technical debt.
-
-### October 2025
-
-- **Codecov, But for Docs** — Code coverage has tooling. Documentation
-  coverage? Nothing. Until now.
-
-- **How Does This Not Exist?** — REST APIs have OpenAPI. GraphQL has
-  introspection. TypeScript packages have... nothing.
-
----
-
-## Operating Principles
-
-1. **Simplicity over flexibility** — Every option is a decision someone
-   has to make. Most decisions don't need to be made.
-
-2. **Standards over custom** — Proprietary formats are debt. Standards
-   are leverage. Pick the boring choice.
-
-3. **Surfaces over features** — The best API is the one that doesn't
-   need documentation. Make the right thing obvious.
-
-4. **Delete over add** — The feature you remove is the feature that
-   can't break. Subtraction is underrated.
+4. **Delete over add** — The feature you remove can't break.
 
 ---
 
 ## Contact
 
-| Channel  | Handle                                      |
-|----------|---------------------------------------------|
-| X        | [@ryan_waits](https://x.com/ryan_waits)     |
-| GitHub   | [ryanwaits](https://github.com/ryanwaits)   |
-| Location | Austin, TX                                  |
-| Agent    | Press \`[A]\` to open communications channel  |
+[@ryan_waits](https://x.com/ryan_waits) · [GitHub](https://github.com/ryanwaits)
 
----
-
-## Classification
-
-This document is **UNCLASSIFIED**. Distribution unlimited.
-Select any text to explain or discuss with the agent.
-
----
-
-*END REPORT*`
+Press \`A\` to chat with the agent.`
 
 export default function HomePage() {
   return (
