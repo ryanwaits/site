@@ -346,6 +346,10 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       try {
         const response = await fetch('/api/chat/warmup', { method: 'POST' })
 
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
         // Check if already ready (existing sandbox)
         const contentType = response.headers.get('content-type')
         if (contentType?.includes('application/json')) {
@@ -972,13 +976,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
         {sandboxBooting && messages.length === 0 && (
           <SandboxBoot stage={sandboxStatus} />
         )}
-        {sandboxStatus === 'error' && messages.length === 0 && (
-          <div className="text-red-500 font-mono text-xs">
-            <p>Failed to initialize sandbox.</p>
-            <p className="mt-2 text-[var(--console-muted)]">Try refreshing the page.</p>
-          </div>
-        )}
-        {!sandboxBooting && sandboxStatus !== 'error' && messages.length === 0 && (
+        {!sandboxBooting && messages.length === 0 && (
           <div className="text-[var(--console-muted)]">
             <p className="text-[11px] whitespace-pre-line">{WELCOME_TEXT}</p>
           </div>
