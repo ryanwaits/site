@@ -247,6 +247,7 @@ export async function POST(request: Request) {
           cmd: 'claude',
           args: [
             '--output-format', 'stream-json',
+            '--verbose',
             '--system-prompt', systemPromptPath,
             '--max-turns', '3',
             '--allowedTools', 'Read,Skill',
