@@ -1,22 +1,8 @@
-import { Sandbox } from '@vercel/sandbox'
 import { cookies } from 'next/headers'
 import { getPosts } from '@/app/n/posts.server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-
-// Session storage for sandbox IDs (resets on cold start, which is fine)
-const sandboxSessions = new Map<string, { sandboxId: string; lastUsed: number }>()
-
-// Cleanup old sessions periodically
-function cleanupSessions() {
-  const now = Date.now()
-  const timeout = 6 * 60 * 1000 // 6 min (slightly longer than sandbox timeout)
-  for (const [key, value] of sandboxSessions.entries()) {
-    if (now - value.lastUsed > timeout) {
-      sandboxSessions.delete(key)
-    }
-  }
-}
+import { getOrCreateSandbox } from './sandbox'
 
 // Read post content by slug (for @mentions)
 async function getPostContent(slug: string): Promise<string | null> {
@@ -108,63 +94,6 @@ Don't overshare. When asked personal questions:
 - "Tell me about yourself" → hit highlights, invite follow-up
 `
 
-async function getOrCreateSandbox(sessionId: string): Promise<Sandbox> {
-  cleanupSessions()
-
-  const existing = sandboxSessions.get(sessionId)
-
-  // Try to reconnect to existing sandbox
-  if (existing) {
-    try {
-      const sandbox = await Sandbox.get({
-        sandboxId: existing.sandboxId,
-        teamId: process.env.VERCEL_TEAM_ID,
-        projectId: process.env.VERCEL_PROJECT_ID,
-        token: process.env.VERCEL_TOKEN,
-      })
-      // Check if sandbox is still running
-      if (sandbox.status === 'running') {
-        sandboxSessions.set(sessionId, { sandboxId: existing.sandboxId, lastUsed: Date.now() })
-        console.log(`[Sandbox] Reconnected to ${existing.sandboxId}`)
-        return sandbox
-      }
-      // Sandbox not running, will create new one
-      sandboxSessions.delete(sessionId)
-      console.log(`[Sandbox] Previous sandbox not running (${sandbox.status}), creating new`)
-    } catch {
-      // Sandbox expired or error, will create new one
-      sandboxSessions.delete(sessionId)
-      console.log(`[Sandbox] Previous sandbox expired, creating new`)
-    }
-  }
-
-  // Create new sandbox with git repo
-  console.log(`[Sandbox] Creating new sandbox for session ${sessionId}`)
-  const sandbox = await Sandbox.create({
-    teamId: process.env.VERCEL_TEAM_ID,
-    projectId: process.env.VERCEL_PROJECT_ID,
-    token: process.env.VERCEL_TOKEN,
-    source: {
-      url: 'https://github.com/ryanwaits/site.git',
-      type: 'git',
-    },
-    timeout: 5 * 60 * 1000, // 5 min idle timeout
-    runtime: 'node24',
-  })
-
-  // Install Claude Code CLI
-  console.log(`[Sandbox] Installing Claude Code CLI`)
-  await sandbox.runCommand({
-    cmd: 'npm',
-    args: ['install', '-g', '@anthropic-ai/claude-code'],
-  })
-
-  sandboxSessions.set(sessionId, { sandboxId: sandbox.sandboxId, lastUsed: Date.now() })
-  console.log(`[Sandbox] Created ${sandbox.sandboxId}`)
-
-  return sandbox
-}
-
 export async function POST(request: Request) {
   let body: { message?: unknown; history?: unknown; mentions?: unknown }
   try {
@@ -235,56 +164,46 @@ export async function POST(request: Request) {
         // Get or create sandbox
         const sandbox = await getOrCreateSandbox(sessionId!)
 
-        // Write system prompt to temp file
-        const systemPromptPath = '/tmp/system-prompt.txt'
-        await sandbox.writeFiles([{
-          path: systemPromptPath,
-          content: Buffer.from(SYSTEM_PROMPT),
-        }])
+        // Prepare config for the agent runner
+        const config = {
+          prompt: fullPrompt,
+          systemPrompt: SYSTEM_PROMPT,
+        }
 
-        // Run Claude with streaming JSON output
+        // Run the agent using the SDK inside the sandbox
+        console.log(`[Sandbox] Running agent`)
         const result = await sandbox.runCommand({
-          cmd: 'claude',
-          args: [
-            '--output-format', 'stream-json',
-            '--verbose',
-            '--system-prompt', systemPromptPath,
-            '--max-turns', '3',
-            '--allowedTools', 'Read,Skill',
-            '--disallowedTools', 'Bash,Edit,Write,Glob,Grep,Task',
-            '--dangerously-skip-permissions',
-            '--print',
-            fullPrompt,
-          ],
+          cmd: 'node',
+          args: ['agent-runner.js', JSON.stringify(config)],
           env: {
             ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY!,
           },
         })
 
-        // Parse streaming JSON output
         const output = await result.stdout()
         const stderr = await result.stderr()
         const exitCode = result.exitCode
 
-        console.log(`[Claude] Exit code: ${exitCode}`)
-        console.log(`[Claude] Stdout length: ${output.length}`)
+        console.log(`[Agent] Exit code: ${exitCode}`)
         if (stderr) {
-          console.log(`[Claude] Stderr: ${stderr.slice(0, 500)}`)
-        }
-        if (output.length < 1000) {
-          console.log(`[Claude] Full output: ${output}`)
+          console.log(`[Agent] Stderr: ${stderr.slice(0, 500)}`)
         }
 
         const lines = output.split('\n').filter(line => line.trim())
-
         let hasStartedResponse = false
 
         for (const line of lines) {
           try {
-            const event = JSON.parse(line)
+            const msg = JSON.parse(line)
 
-            if (event.type === 'assistant' && event.message?.content) {
-              for (const block of event.message.content) {
+            // User turn started - show "Processing request..."
+            if (msg.type === 'user') {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', kind: 'system', tool: 'Processing', detail: 'request' })}\n\n`))
+            }
+
+            // Assistant is generating response
+            if (msg.type === 'assistant' && msg.message?.content) {
+              for (const block of msg.message.content) {
                 if (block.type === 'tool_use') {
                   const toolName = block.name
                   const toolInput = block.input as Record<string, unknown>
@@ -323,7 +242,18 @@ export async function POST(request: Request) {
               }
             }
 
-            if (event.type === 'result') {
+            // Tool completed - show result status
+            if (msg.type === 'tool_result') {
+              const isError = msg.result?.is_error
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                type: 'activity',
+                kind: 'result',
+                tool: isError ? 'Error' : 'Done',
+                detail: isError ? 'tool failed' : undefined
+              })}\n\n`))
+            }
+
+            if (msg.type === 'result') {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
             }
           } catch {
@@ -331,9 +261,10 @@ export async function POST(request: Request) {
           }
         }
 
-        // Ensure we send done if we processed any text
-        if (hasStartedResponse) {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
+        // Ensure we send done
+        if (!hasStartedResponse) {
+          // No response was generated, send error
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'No response generated' })}\n\n`))
         }
 
         controller.close()

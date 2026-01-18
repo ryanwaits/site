@@ -6,7 +6,10 @@ import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import { serialize } from 'next-mdx-remote/serialize'
 import { highlight } from 'sugar-high'
 import { viewComponents } from './view-components'
+import { SandboxBoot } from './sandbox-boot'
 import type { Post } from '@/app/n/posts'
+
+type SandboxStatus = 'idle' | 'creating' | 'cloning' | 'installing' | 'ready' | 'error'
 
 interface ViewData {
   title: string
@@ -21,7 +24,7 @@ interface Message {
 }
 
 interface Activity {
-  type: 'thinking' | 'tool' | 'skill'
+  type: 'thinking' | 'tool' | 'skill' | 'system' | 'result'
   tool?: string
   detail?: string
 }
@@ -173,6 +176,25 @@ function Spinner() {
 function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isActive: boolean }) {
   if (activities.length === 0 && !isActive) return null
 
+  // Get icon and style based on activity type
+  const getActivityIcon = (type: Activity['type']) => {
+    switch (type) {
+      case 'thinking': return null // Uses spinner
+      case 'system': return '⟩'
+      case 'result': return '✓'
+      case 'skill': return '◆'
+      default: return '◇'
+    }
+  }
+
+  const getActivityStyle = (type: Activity['type']) => {
+    switch (type) {
+      case 'result': return 'text-green-500'
+      case 'system': return 'text-[var(--console-accent)]'
+      default: return 'text-[var(--console-accent)]'
+    }
+  }
+
   return (
     <div className="pl-4 space-y-1 text-xs mb-2">
       {activities.map((activity, i) => (
@@ -184,7 +206,7 @@ function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isA
             </>
           ) : (
             <>
-              <span className="text-[var(--console-accent)]">◇</span>
+              <span className={getActivityStyle(activity.type)}>{getActivityIcon(activity.type)}</span>
               <span>{activity.tool}</span>
               {activity.detail && (
                 <span className="opacity-60">{activity.detail}</span>
@@ -305,6 +327,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   const [typeaheadIndex, setTypeaheadIndex] = useState(0)
   const [mentionTypeaheadIndex, setMentionTypeaheadIndex] = useState(0)
   const [posts, setPosts] = useState<Post[]>([])
+  const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('idle')
 
   // Fetch posts for @mention autocomplete
   useEffect(() => {
@@ -313,6 +336,59 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       .then(setPosts)
       .catch(() => {})
   }, [])
+
+  // Warmup sandbox when console opens
+  useEffect(() => {
+    if (!isOpen || sandboxStatus !== 'idle') return
+
+    const warmup = async () => {
+      setSandboxStatus('creating')
+      try {
+        const response = await fetch('/api/chat/warmup', { method: 'POST' })
+
+        // Check if already ready (existing sandbox)
+        const contentType = response.headers.get('content-type')
+        if (contentType?.includes('application/json')) {
+          const data = await response.json()
+          if (data.status === 'ready') {
+            setSandboxStatus('ready')
+            return
+          }
+        }
+
+        // Stream progress updates
+        const reader = response.body?.getReader()
+        if (!reader) throw new Error('No response body')
+
+        const decoder = new TextDecoder()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6))
+                if (data.stage) {
+                  setSandboxStatus(data.stage as SandboxStatus)
+                }
+              } catch {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Warmup error:', error)
+        setSandboxStatus('error')
+      }
+    }
+
+    warmup()
+  }, [isOpen, sandboxStatus])
 
   // Compute filtered commands for typeahead
   const showTypeahead = input.startsWith('/') && !input.includes(' ')
@@ -722,8 +798,14 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
               if (data.type === 'thinking') {
                 setCurrentActivities([{ type: 'thinking' }])
               } else if (data.type === 'activity') {
+                const kindMap: Record<string, Activity['type']> = {
+                  skill: 'skill',
+                  tool: 'tool',
+                  system: 'system',
+                  result: 'result',
+                }
                 const activity: Activity = {
-                  type: data.kind === 'skill' ? 'skill' : 'tool',
+                  type: kindMap[data.kind] || 'tool',
                   tool: data.tool,
                   detail: data.detail,
                 }
@@ -868,6 +950,9 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     )
   }
 
+  const sandboxReady = sandboxStatus === 'ready' || sandboxStatus === 'idle'
+  const sandboxBooting = sandboxStatus === 'creating' || sandboxStatus === 'cloning' || sandboxStatus === 'installing'
+
   // Shared content renderer for both mobile and desktop
   const renderConsoleContent = () => (
     <div
@@ -876,14 +961,24 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
         const selection = window.getSelection()
         const hasSelection = selection && selection.toString().length > 0
         const isClickOnInput = (e.target as HTMLElement).tagName === 'TEXTAREA'
-        if (!hasSelection && !isClickOnInput && inputRef.current) {
+        if (!hasSelection && !isClickOnInput && inputRef.current && sandboxReady) {
           inputRef.current.focus()
         }
       }}
     >
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-[var(--console-content-bg)]">
-        {messages.length === 0 && (
+        {/* Show boot animation while sandbox initializes */}
+        {sandboxBooting && messages.length === 0 && (
+          <SandboxBoot stage={sandboxStatus} />
+        )}
+        {sandboxStatus === 'error' && messages.length === 0 && (
+          <div className="text-red-500 font-mono text-xs">
+            <p>Failed to initialize sandbox.</p>
+            <p className="mt-2 text-[var(--console-muted)]">Try refreshing the page.</p>
+          </div>
+        )}
+        {!sandboxBooting && sandboxStatus !== 'error' && messages.length === 0 && (
           <div className="text-[var(--console-muted)]">
             <p className="text-[11px] whitespace-pre-line">{WELCOME_TEXT}</p>
           </div>
@@ -945,8 +1040,8 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything, try /... or @..."
-            disabled={isStreaming}
+            placeholder={sandboxBooting ? "Initializing..." : "Ask anything, try /... or @..."}
+            disabled={isStreaming || sandboxBooting}
             className="flex-1 bg-transparent text-[var(--console-text)] placeholder-[var(--console-muted)] outline-none resize-none text-xs leading-[1.4] overflow-y-auto"
             rows={1}
             style={{ maxHeight: '120px' }}
