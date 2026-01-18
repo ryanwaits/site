@@ -30,7 +30,7 @@ async function run() {
       cwd: '/vercel/sandbox',
       settingSources: ['project'],
       allowedTools: ['Read', 'Skill'],
-      disallowedTools: ['Bash', 'Edit', 'Write', 'Glob', 'Grep', 'Task'],
+      disallowedTools: ['Bash', 'Edit', 'Write', 'Glob', 'Grep', 'Task', 'WebSearch', 'WebFetch'],
     },
   });
 
