@@ -6,7 +6,6 @@ import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import { serialize } from 'next-mdx-remote/serialize'
 import { highlight } from 'sugar-high'
 import { viewComponents } from './view-components'
-import { SandboxBoot } from './sandbox-boot'
 import type { Post } from '@/app/n/posts'
 
 type SandboxStatus = 'idle' | 'creating' | 'cloning' | 'installing' | 'ready' | 'error'
@@ -160,6 +159,19 @@ const markdownComponents = {
 // Braille spinner frames
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
+// ASCII progress bar frames for header
+const PROGRESS_FRAMES = [
+  '░░░░░░░░',
+  '█░░░░░░░',
+  '██░░░░░░',
+  '███░░░░░',
+  '████░░░░',
+  '█████░░░',
+  '██████░░',
+  '███████░',
+  '████████',
+]
+
 function Spinner() {
   const [frame, setFrame] = useState(0)
 
@@ -171,6 +183,23 @@ function Spinner() {
   }, [])
 
   return <span className="text-[var(--console-accent)]">{SPINNER_FRAMES[frame]}</span>
+}
+
+function HeaderProgress() {
+  const [frame, setFrame] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame(f => (f + 1) % PROGRESS_FRAMES.length)
+    }, 150)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <span className="text-[11px] text-[var(--color-text)] tracking-[0.05em] font-medium whitespace-nowrap font-mono">
+      [ {PROGRESS_FRAMES[frame]} ]
+    </span>
+  )
 }
 
 function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isActive: boolean }) {
@@ -972,11 +1001,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     >
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-[var(--console-content-bg)]">
-        {/* Show boot animation while sandbox initializes */}
-        {sandboxBooting && messages.length === 0 && (
-          <SandboxBoot stage={sandboxStatus} />
-        )}
-        {!sandboxBooting && messages.length === 0 && (
+        {messages.length === 0 && (
           <div className="text-[var(--console-muted)]">
             <p className="text-[11px] whitespace-pre-line">{WELCOME_TEXT}</p>
           </div>
@@ -1032,15 +1057,19 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       {/* Input */}
       <div className="border-t border-[var(--color-border)] p-3 bg-[var(--console-content-bg)]">
         <div className="flex items-start gap-2">
-          <span className="text-[var(--console-accent)] leading-[1.4]">❯</span>
+          <span className={`leading-[1.4] ${sandboxBooting ? 'text-[var(--console-muted)] opacity-50' : 'text-[var(--console-accent)]'}`}>❯</span>
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={sandboxBooting ? "Initializing..." : "Ask anything, try /... or @..."}
+            placeholder={sandboxBooting ? "Initializing agent..." : "Ask anything, try /... or @..."}
             disabled={isStreaming || sandboxBooting}
-            className="flex-1 bg-transparent text-[var(--console-text)] placeholder-[var(--console-muted)] outline-none resize-none text-xs leading-[1.4] overflow-y-auto"
+            className={`flex-1 bg-transparent outline-none resize-none text-xs leading-[1.4] overflow-y-auto ${
+              sandboxBooting
+                ? 'text-[var(--console-muted)] placeholder-[var(--console-muted)] opacity-50'
+                : 'text-[var(--console-text)] placeholder-[var(--console-muted)]'
+            }`}
             rows={1}
             style={{ maxHeight: '120px' }}
           />
@@ -1131,8 +1160,12 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
               {/* Horizontal line */}
               <div className="flex-1 h-px bg-[var(--color-muted)]" />
 
-              {/* Title Label */}
-              <span className="text-[11px] text-[var(--color-text)] tracking-[0.15em] uppercase font-medium whitespace-nowrap">[ Agent ]</span>
+              {/* Title Label or Progress */}
+              {sandboxBooting ? (
+                <HeaderProgress />
+              ) : (
+                <span className="text-[11px] text-[var(--color-text)] tracking-[0.15em] uppercase font-medium whitespace-nowrap">[ Agent ]</span>
+              )}
 
               {/* Horizontal line */}
               <div className="flex-1 h-px bg-[var(--color-muted)]" />
@@ -1192,8 +1225,12 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
           {/* Horizontal line */}
           <div className="flex-1 h-px bg-[var(--color-muted)]" />
 
-          {/* Title Label */}
-          <span className="text-[11px] text-[var(--color-text)] tracking-[0.15em] uppercase font-medium whitespace-nowrap">[ Agent ]</span>
+          {/* Title Label or Progress */}
+          {sandboxBooting ? (
+            <HeaderProgress />
+          ) : (
+            <span className="text-[11px] text-[var(--color-text)] tracking-[0.15em] uppercase font-medium whitespace-nowrap">[ Agent ]</span>
+          )}
 
           {/* Horizontal line */}
           <div className="flex-1 h-px bg-[var(--color-muted)]" />

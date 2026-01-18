@@ -242,17 +242,11 @@ export async function POST(request: Request) {
                   }
 
                   if (block.type === 'text' && block.text) {
-                    // Skip preamble text (assistant announcing tool use)
-                    const text = block.text.trim()
-                    const isPreamble = /^(I'll|I will|Let me|I'm going to|Using the|I can|I should)\b/i.test(text)
-
-                    if (!isPreamble) {
-                      if (!hasStartedResponse) {
-                        hasStartedResponse = true
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
-                      }
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
+                    if (!hasStartedResponse) {
+                      hasStartedResponse = true
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
                     }
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
                   }
                 }
               }
