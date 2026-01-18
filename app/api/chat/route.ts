@@ -262,6 +262,18 @@ export async function POST(request: Request) {
 
         // Parse streaming JSON output
         const output = await result.stdout()
+        const stderr = await result.stderr()
+        const exitCode = result.exitCode
+
+        console.log(`[Claude] Exit code: ${exitCode}`)
+        console.log(`[Claude] Stdout length: ${output.length}`)
+        if (stderr) {
+          console.log(`[Claude] Stderr: ${stderr.slice(0, 500)}`)
+        }
+        if (output.length < 1000) {
+          console.log(`[Claude] Full output: ${output}`)
+        }
+
         const lines = output.split('\n').filter(line => line.trim())
 
         let hasStartedResponse = false
