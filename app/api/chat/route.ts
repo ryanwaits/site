@@ -196,61 +196,24 @@ export async function POST(request: Request) {
           try {
             const msg = JSON.parse(line)
 
-            // User turn started - show "Processing request..."
-            if (msg.type === 'user') {
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', kind: 'system', tool: 'Processing', detail: 'request' })}\n\n`))
-            }
 
             // Assistant is generating response
             if (msg.type === 'assistant' && msg.message?.content) {
               for (const block of msg.message.content) {
-                if (block.type === 'tool_use') {
-                  const toolName = block.name
-                  const toolInput = block.input as Record<string, unknown>
-
-                  let activity: { kind: string; tool: string; detail?: string }
-
-                  if (toolName === 'Read') {
-                    activity = {
-                      kind: 'tool',
-                      tool: 'Reading',
-                      detail: String(toolInput.file_path || '').replace(/^\/vercel\/sandbox\//, ''),
-                    }
-                  } else if (toolName === 'Skill') {
-                    activity = {
-                      kind: 'skill',
-                      tool: 'Using',
-                      detail: String(toolInput.skill || ''),
-                    }
-                  } else {
-                    activity = {
-                      kind: 'tool',
-                      tool: toolName,
-                    }
-                  }
-
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', ...activity })}\n\n`))
-                }
-
                 if (block.type === 'text' && block.text) {
-                  if (!hasStartedResponse) {
-                    hasStartedResponse = true
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
+                  // Skip preamble text (assistant announcing tool use)
+                  const text = block.text.trim()
+                  const isPreamble = /^(I'll|I will|Let me|I'm going to|Using the|I can|I should)\b/i.test(text)
+
+                  if (!isPreamble) {
+                    if (!hasStartedResponse) {
+                      hasStartedResponse = true
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
+                    }
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
                   }
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
                 }
               }
-            }
-
-            // Tool completed - show result status
-            if (msg.type === 'tool_result') {
-              const isError = msg.result?.is_error
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                type: 'activity',
-                kind: 'result',
-                tool: isError ? 'Error' : 'Done',
-                detail: isError ? 'tool failed' : undefined
-              })}\n\n`))
             }
 
             if (msg.type === 'result') {
