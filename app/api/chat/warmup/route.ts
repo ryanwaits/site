@@ -1,6 +1,6 @@
 import { Sandbox } from '@vercel/sandbox'
 import { cookies } from 'next/headers'
-import { sandboxSessions, AGENT_RUNNER_SCRIPT } from '../sandbox'
+import { sandboxSessions, AGENT_RUNNER_SCRIPT, VIEW_RUNNER_SCRIPT } from '../sandbox'
 
 const isDev = !process.env.VERCEL_TOKEN
 
@@ -124,11 +124,11 @@ export async function POST() {
           args: ['install'],
         })
 
-        // Write agent runner script
-        await sandbox.writeFiles([{
-          path: '/vercel/sandbox/agent-runner.js',
-          content: Buffer.from(AGENT_RUNNER_SCRIPT),
-        }])
+        // Write runner scripts
+        await sandbox.writeFiles([
+          { path: '/vercel/sandbox/agent-runner.js', content: Buffer.from(AGENT_RUNNER_SCRIPT) },
+          { path: '/vercel/sandbox/view-runner.js', content: Buffer.from(VIEW_RUNNER_SCRIPT) },
+        ])
 
         // Store session
         sandboxSessions.set(sessionId!, { sandboxId: sandbox.sandboxId, lastUsed: Date.now() })

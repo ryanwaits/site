@@ -740,9 +740,18 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
                       return updated
                     })
                   } else if (data.type === 'error') {
+                    // Handle session expiry
+                    if (data.errorType === 'session_expired') {
+                      setSandboxStatus('idle')
+                    }
                     setMessages(prev => {
                       const updated = [...prev]
-                      updated[updated.length - 1] = { role: 'assistant', content: `Error: ${data.message}` }
+                      updated[updated.length - 1] = {
+                        role: 'assistant',
+                        content: data.errorType === 'session_expired'
+                          ? 'Session expired. Please try again.'
+                          : `Error: ${data.message}`
+                      }
                       return updated
                     })
                   }
@@ -864,9 +873,20 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
               } else if (data.type === 'error') {
                 console.error('Stream error:', data.message)
                 setCurrentActivities([])
+
+                // Handle session expiry - reset sandbox status to trigger re-warmup
+                if (data.errorType === 'session_expired') {
+                  setSandboxStatus('idle')
+                }
+
                 setMessages(prev => {
                   const updated = [...prev]
-                  updated[updated.length - 1] = { role: 'assistant', content: `Error: ${data.message}` }
+                  updated[updated.length - 1] = {
+                    role: 'assistant',
+                    content: data.errorType === 'session_expired'
+                      ? 'Session expired. Please try again.'
+                      : `Error: ${data.message}`
+                  }
                   return updated
                 })
               }

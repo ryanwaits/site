@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { getPosts } from '@/app/n/posts.server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { getOrCreateSandbox } from './sandbox'
+import { getOrCreateSandbox, sandboxSessions } from './sandbox'
 
 // Read post content by slug (for @mentions)
 async function getPostContent(slug: string): Promise<string | null> {
@@ -272,7 +272,25 @@ export async function POST(request: Request) {
         controller.close()
       } catch (error) {
         console.error('Chat error:', error)
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`))
+        const errorMessage = error instanceof Error ? error.message : String(error)
+
+        // Detect sandbox/session expiry errors
+        const isSessionExpired = errorMessage.includes('Claude Code executable not found') ||
+          errorMessage.includes('sandbox') ||
+          errorMessage.includes('ECONNREFUSED') ||
+          errorMessage.includes('not running')
+
+        if (isSessionExpired) {
+          // Clear the stale session so next request creates fresh sandbox
+          sandboxSessions.delete(sessionId!)
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+            type: 'error',
+            errorType: 'session_expired',
+            message: 'Session expired. Please try again.'
+          })}\n\n`))
+        } else {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`))
+        }
         controller.close()
       }
     },

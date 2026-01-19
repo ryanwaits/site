@@ -14,6 +14,47 @@ export function cleanupSessions() {
   }
 }
 
+// View runner script for /view command (structured output)
+export const VIEW_RUNNER_SCRIPT = `
+const { query } = require('@anthropic-ai/claude-agent-sdk');
+
+const viewSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', description: 'A concise, descriptive title for the view' },
+    mdx: { type: 'string', description: 'The MDX content using available components. No code fences, just raw MDX/JSX.' }
+  },
+  required: ['title', 'mdx'],
+  additionalProperties: false
+};
+
+async function run() {
+  const config = JSON.parse(process.argv[2]);
+
+  const q = query({
+    prompt: config.prompt,
+    options: {
+      model: 'claude-sonnet-4-20250514',
+      systemPrompt: config.systemPrompt,
+      maxTurns: 3,
+      cwd: '/vercel/sandbox',
+      allowedTools: [],
+      disallowedTools: ['Bash', 'Edit', 'Write', 'Read', 'Glob', 'Grep', 'Task'],
+      outputFormat: { type: 'json_schema', schema: viewSchema },
+    },
+  });
+
+  for await (const msg of q) {
+    console.log(JSON.stringify(msg));
+  }
+}
+
+run().catch(err => {
+  console.error(JSON.stringify({ type: 'error', message: err.message }));
+  process.exit(1);
+});
+`
+
 // The agent runner script that executes inside the sandbox
 export const AGENT_RUNNER_SCRIPT = `
 const { query } = require('@anthropic-ai/claude-agent-sdk');
@@ -103,11 +144,11 @@ export async function getOrCreateSandbox(sessionId: string): Promise<Sandbox> {
     args: ['install'],
   })
 
-  // Write the agent runner script
-  await sandbox.writeFiles([{
-    path: '/vercel/sandbox/agent-runner.js',
-    content: Buffer.from(AGENT_RUNNER_SCRIPT),
-  }])
+  // Write the runner scripts
+  await sandbox.writeFiles([
+    { path: '/vercel/sandbox/agent-runner.js', content: Buffer.from(AGENT_RUNNER_SCRIPT) },
+    { path: '/vercel/sandbox/view-runner.js', content: Buffer.from(VIEW_RUNNER_SCRIPT) },
+  ])
 
   sandboxSessions.set(sessionId, { sandboxId: sandbox.sandboxId, lastUsed: Date.now() })
   console.log(`[Sandbox] Created ${sandbox.sandboxId}`)
