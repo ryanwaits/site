@@ -125,6 +125,18 @@ df -h                       # disk usage
 free -h                     # memory usage
 ```
 
+### System Updates
+
+```bash
+sudo apt update && sudo apt upgrade -y && sudo reboot
+```
+
+After reboot, SSH back in and verify:
+```bash
+pm2 status
+curl https://ryanwaits.com/api/health
+```
+
 ## Troubleshooting
 
 **App not responding:**

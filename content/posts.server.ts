@@ -27,17 +27,17 @@ export async function getPosts(): Promise<Post[]> {
     try {
       const content = await fs.readFile(mdxPath, 'utf-8');
 
-      // Extract metadata (use backreference to match same quote type)
-      const titleMatch = content.match(/title:\s*(['"])(.+?)\1/);
-      const descMatch = content.match(/description:\s*(['"])(.+?)\1/);
-      const dateMatch = content.match(/<AnimatedName\s+date=['"](.+?)['"]/);
+      // Extract metadata from frontmatter (handles unquoted YAML values)
+      const titleMatch = content.match(/title:\s*(.+)/);
+      const descMatch = content.match(/description:\s*(.+)/);
+      const dateMatch = content.match(/date:\s*(.+)/);
 
       if (titleMatch && descMatch && dateMatch) {
         posts.push({
           slug: entry.name,
-          title: titleMatch[2],
-          description: descMatch[2],
-          date: dateMatch[1],
+          title: titleMatch[1].trim(),
+          description: descMatch[1].trim(),
+          date: dateMatch[1].trim(),
         });
       }
     } catch {
