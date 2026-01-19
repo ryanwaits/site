@@ -2,7 +2,6 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
-import { Analytics } from "@vercel/analytics/react";
 import { ConsoleWrapper } from "./components/console-wrapper";
 
 const inter = Inter({
@@ -58,7 +57,6 @@ export default function RootLayout({
         </head>
         <body className="antialiased tracking-tight font-sans">
           {children}
-          <Analytics />
           <ConsoleWrapper />
         </body>
       </html>

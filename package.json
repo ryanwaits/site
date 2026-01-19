@@ -4,6 +4,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "start:prod": "node .next/standalone/server.js",
     "delete": "rm -rf app/n"
   },
   "dependencies": {
@@ -12,8 +13,6 @@
     "@next/mdx": "16.1.1",
     "@tailwindcss/postcss": "4.1.18",
     "@types/mdx": "2.0.13",
-    "@vercel/analytics": "1.6.1",
-    "@vercel/sandbox": "1.2.0",
     "motion": "12.26.2",
     "next": "16.1.1",
     "next-mdx-remote": "5.0.0",

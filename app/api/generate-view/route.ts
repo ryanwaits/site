@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { getOrCreateSandbox, sandboxSessions } from '../chat/sandbox'
+import { query } from '@anthropic-ai/claude-agent-sdk'
 
 const VIEW_SYSTEM_PROMPT = `You generate MDX views for Ryan Waits' personal website. Generate clean, well-structured MDX using the available components.
 
@@ -39,6 +39,16 @@ const VIEW_SYSTEM_PROMPT = `You generate MDX views for Ryan Waits' personal webs
 - Standard markdown (headers, lists, bold) works inside components
 - Generate ONLY the MDX markup - no explanations or commentary`
 
+const viewSchema = {
+  type: 'object' as const,
+  properties: {
+    title: { type: 'string' as const, description: 'A concise, descriptive title for the view' },
+    mdx: { type: 'string' as const, description: 'The MDX content using available components. No code fences, just raw MDX/JSX.' }
+  },
+  required: ['title', 'mdx'] as const,
+  additionalProperties: false
+}
+
 export async function POST(request: Request) {
   const { prompt, history = [] } = await request.json()
 
@@ -65,96 +75,58 @@ export async function POST(request: Request) {
       try {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'generating' })}\n\n`))
 
-        // Get or create sandbox
-        const sandbox = await getOrCreateSandbox(sessionId!)
-
-        // Run the view runner
-        const config = { prompt: fullPrompt, systemPrompt: VIEW_SYSTEM_PROMPT }
-        console.log(`[View] Running view-runner in sandbox`)
-
-        const command = await sandbox.runCommand({
-          cmd: 'node',
-          args: ['view-runner.js', JSON.stringify(config)],
-          env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY! },
-          detached: true,
+        // Run the agent directly using the SDK with structured output
+        const agentQuery = query({
+          prompt: fullPrompt,
+          options: {
+            model: 'claude-sonnet-4-20250514',
+            systemPrompt: VIEW_SYSTEM_PROMPT,
+            maxTurns: 3,
+            cwd: process.cwd(),
+            allowedTools: [],
+            disallowedTools: ['Bash', 'Edit', 'Write', 'Read', 'Glob', 'Grep', 'Task'],
+            outputFormat: { type: 'json_schema', schema: viewSchema },
+          },
         })
 
         let viewSent = false
-        let buffer = ''
 
-        for await (const log of command.logs()) {
-          if (log.stream === 'stderr') {
-            console.log(`[View stderr] ${log.data}`)
-            continue
+        for await (const msg of agentQuery) {
+          // Structured output comes as StructuredOutput tool_use
+          if (msg.type === 'assistant' && msg.message?.content) {
+            for (const block of msg.message.content) {
+              if (block.type === 'tool_use' && block.name === 'StructuredOutput') {
+                const input = block.input as { title?: string; mdx?: string }
+                if (input.title && input.mdx) {
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                    type: 'view',
+                    title: input.title,
+                    mdx: input.mdx
+                  })}\n\n`))
+                  viewSent = true
+                }
+              }
+            }
           }
 
-          buffer += log.data
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
-
-          for (const line of lines) {
-            if (!line.trim()) continue
-
-            try {
-              const msg = JSON.parse(line)
-
-              // Structured output comes as StructuredOutput tool_use
-              if (msg.type === 'assistant' && msg.message?.content) {
-                for (const block of msg.message.content) {
-                  if (block.type === 'tool_use' && block.name === 'StructuredOutput') {
-                    const input = block.input as { title?: string; mdx?: string }
-                    if (input.title && input.mdx) {
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                        type: 'view',
-                        title: input.title,
-                        mdx: input.mdx
-                      })}\n\n`))
-                      viewSent = true
-                    }
-                  }
-                }
-              }
-
-              if (msg.type === 'result') {
-                if (!viewSent) {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                    type: 'error',
-                    message: 'No view generated'
-                  })}\n\n`))
-                }
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
-              }
-            } catch {
-              // Skip non-JSON lines
+          if (msg.type === 'result') {
+            if (!viewSent) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                type: 'error',
+                message: 'No view generated'
+              })}\n\n`))
             }
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
           }
         }
 
-        await command.wait()
         controller.close()
       } catch (error) {
         console.error('View generation error:', error)
-        const errorMessage = error instanceof Error ? error.message : String(error)
-
-        // Detect session expiry
-        const isSessionExpired = errorMessage.includes('Claude Code executable not found') ||
-          errorMessage.includes('sandbox') ||
-          errorMessage.includes('ECONNREFUSED') ||
-          errorMessage.includes('not running')
-
-        if (isSessionExpired) {
-          sandboxSessions.delete(sessionId!)
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-            type: 'error',
-            errorType: 'session_expired',
-            message: 'Session expired. Please try again.'
-          })}\n\n`))
-        } else {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-            type: 'error',
-            message: 'View generation failed'
-          })}\n\n`))
-        }
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+          type: 'error',
+          message: 'View generation failed'
+        })}\n\n`))
         controller.close()
       }
     },

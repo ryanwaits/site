@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers'
+import { query } from '@anthropic-ai/claude-agent-sdk'
 import { getPosts } from '@/app/n/posts.server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { getOrCreateSandbox, sandboxSessions } from './sandbox'
 
 // Read post content by slug (for @mentions)
 async function getPostContent(slug: string): Promise<string | null> {
@@ -169,102 +169,70 @@ export async function POST(request: Request) {
         // Signal thinking state
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'thinking' })}\n\n`))
 
-        // Get or create sandbox
-        const sandbox = await getOrCreateSandbox(sessionId!)
-
-        // Prepare config for the agent runner
-        const config = {
+        // Run the agent directly using the SDK
+        const agentQuery = query({
           prompt: fullPrompt,
-          systemPrompt: SYSTEM_PROMPT,
-        }
-
-        // Run the agent in detached mode for real-time streaming
-        console.log(`[Sandbox] Running agent (detached)`)
-        const command = await sandbox.runCommand({
-          cmd: 'node',
-          args: ['agent-runner.js', JSON.stringify(config)],
-          env: {
-            ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY!,
+          options: {
+            model: 'claude-3-5-haiku-20241022',
+            systemPrompt: SYSTEM_PROMPT,
+            maxTurns: 3,
+            cwd: process.cwd(),
+            settingSources: ['project'],
+            allowedTools: ['Read', 'Skill'],
+            disallowedTools: ['Bash', 'Edit', 'Write', 'Glob', 'Grep', 'Task', 'WebSearch', 'WebFetch'],
           },
-          detached: true,
         })
 
         let hasStartedResponse = false
-        let buffer = ''
 
-        // Stream logs in real-time
-        for await (const log of command.logs()) {
-          if (log.stream === 'stderr') {
-            console.log(`[Agent stderr] ${log.data}`)
-            continue
-          }
+        for await (const msg of agentQuery) {
+          // Tool use - show activity in real-time
+          if (msg.type === 'assistant' && msg.message?.content) {
+            for (const block of msg.message.content) {
+              if (block.type === 'tool_use') {
+                const toolName = block.name
+                const toolInput = block.input as Record<string, unknown>
 
-          // Buffer stdout and process complete lines
-          buffer += log.data
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || '' // Keep incomplete line in buffer
+                let activity: { kind: string; tool: string; detail?: string }
 
-          for (const line of lines) {
-            if (!line.trim()) continue
-
-            try {
-              const msg = JSON.parse(line)
-
-              // Tool use - show activity in real-time
-              if (msg.type === 'assistant' && msg.message?.content) {
-                for (const block of msg.message.content) {
-                  if (block.type === 'tool_use') {
-                    const toolName = block.name
-                    const toolInput = block.input as Record<string, unknown>
-
-                    let activity: { kind: string; tool: string; detail?: string }
-
-                    if (toolName === 'Read') {
-                      activity = {
-                        kind: 'tool',
-                        tool: 'Reading',
-                        detail: String(toolInput.file_path || '').replace(/^\/vercel\/sandbox\//, ''),
-                      }
-                    } else if (toolName === 'Skill') {
-                      activity = {
-                        kind: 'skill',
-                        tool: 'Using',
-                        detail: String(toolInput.skill || ''),
-                      }
-                    } else {
-                      activity = {
-                        kind: 'tool',
-                        tool: toolName,
-                      }
-                    }
-
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', ...activity })}\n\n`))
+                if (toolName === 'Read') {
+                  activity = {
+                    kind: 'tool',
+                    tool: 'Reading',
+                    detail: path.basename(String(toolInput.file_path || '')),
                   }
-
-                  if (block.type === 'text' && block.text) {
-                    if (!hasStartedResponse) {
-                      hasStartedResponse = true
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
-                    }
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
+                } else if (toolName === 'Skill') {
+                  activity = {
+                    kind: 'skill',
+                    tool: 'Using',
+                    detail: String(toolInput.skill || ''),
+                  }
+                } else {
+                  activity = {
+                    kind: 'tool',
+                    tool: toolName,
                   }
                 }
+
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'activity', ...activity })}\n\n`))
               }
 
-              if (msg.type === 'result') {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
+              if (block.type === 'text' && block.text) {
+                if (!hasStartedResponse) {
+                  hasStartedResponse = true
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'streaming' })}\n\n`))
+                }
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`))
               }
-            } catch {
-              // Skip non-JSON lines
             }
+          }
+
+          if (msg.type === 'result') {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))
           }
         }
 
-        // Wait for command to finish
-        const result = await command.wait()
-        console.log(`[Agent] Exit code: ${result.exitCode}`)
-
-        // Ensure we send done
+        // Ensure we send done if no result was received
         if (!hasStartedResponse) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'No response generated' })}\n\n`))
         }
@@ -272,25 +240,7 @@ export async function POST(request: Request) {
         controller.close()
       } catch (error) {
         console.error('Chat error:', error)
-        const errorMessage = error instanceof Error ? error.message : String(error)
-
-        // Detect sandbox/session expiry errors
-        const isSessionExpired = errorMessage.includes('Claude Code executable not found') ||
-          errorMessage.includes('sandbox') ||
-          errorMessage.includes('ECONNREFUSED') ||
-          errorMessage.includes('not running')
-
-        if (isSessionExpired) {
-          // Clear the stale session so next request creates fresh sandbox
-          sandboxSessions.delete(sessionId!)
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-            type: 'error',
-            errorType: 'session_expired',
-            message: 'Session expired. Please try again.'
-          })}\n\n`))
-        } else {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`))
-        }
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`))
         controller.close()
       }
     },
