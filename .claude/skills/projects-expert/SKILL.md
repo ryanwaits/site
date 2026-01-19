@@ -7,17 +7,36 @@ description: Deep knowledge about Ryan's open source projects (openpkg-ts, docco
 
 Provide accurate, detailed answers about Ryan's open source projects. Use the exact information below—do not fabricate features or output.
 
+## Live Documentation (WebFetch)
+
+For detailed or current information, fetch live docs from these URLs ONLY:
+
+| Project | README URL |
+|---------|------------|
+| openpkg-ts (root) | `https://raw.githubusercontent.com/ryanwaits/openpkg-ts/main/README.md` |
+| @openpkg-ts/cli | `https://raw.githubusercontent.com/ryanwaits/openpkg-ts/main/packages/cli/README.md` |
+| @openpkg-ts/sdk | `https://raw.githubusercontent.com/ryanwaits/openpkg-ts/main/packages/sdk/README.md` |
+| @openpkg-ts/spec | `https://raw.githubusercontent.com/ryanwaits/openpkg-ts/main/packages/spec/README.md` |
+| @openpkg-ts/react | `https://raw.githubusercontent.com/ryanwaits/openpkg-ts/main/packages/react/README.md` |
+| @openpkg-ts/adapters | `https://raw.githubusercontent.com/ryanwaits/openpkg-ts/main/packages/adapters/README.md` |
+
+**When to fetch**: User asks for specific CLI flags, SDK methods, or detailed API examples not in the reference below.
+
+**Do NOT fetch** for general "what is openpkg" questions—use the reference below first.
+
 ---
 
 ## openpkg-ts
 
 TypeScript API extraction and documentation toolkit. Extract complete API specifications from source code, then generate docs for any framework.
 
+**Deep dive**: Read `content/new-standard-who-dis/index.mdx` for Standard JSON Schema and runtime introspection details.
+
 ### Why
 
 - **Zero manual docs** — Extract everything from TypeScript source
 - **Framework agnostic** — Fumadocs, Docusaurus, Mintlify, or custom
-- **Schema library support** — Zod, Valibot, ArkType, TypeBox
+- **Schema library support** — Zod, Valibot, ArkType, TypeBox (requires `--runtime` flag)
 - **Version tracking** — Diff specs and get semver recommendations
 
 ### Install
@@ -25,24 +44,90 @@ TypeScript API extraction and documentation toolkit. Extract complete API specif
 ```bash
 npm install -g @openpkg-ts/cli
 # or use directly
-npx @openpkg-ts/cli
+npx @openpkg-ts/cli <command>
 ```
 
 ### CLI Commands
 
+#### list — List exports from entry point
+
 ```bash
-# Extract spec from TypeScript source
-openpkg snapshot src/index.ts
-
-# Generate docs from spec
-openpkg docs --format markdown
-
-# Pipeline: extract and generate in one step
-npx @openpkg-ts/cli snapshot src/index.ts | npx @openpkg-ts/cli docs --format markdown
-
-# Diff two specs for breaking changes
-openpkg diff old-spec.json new-spec.json
+openpkg list src/index.ts
+# Output: JSON array of { name, kind, file, line, description }
 ```
+
+#### get — Get detailed spec for single export
+
+```bash
+openpkg get src/index.ts createClient
+# Output: JSON with { export, types }
+```
+
+#### snapshot — Generate full spec
+
+```bash
+openpkg snapshot src/index.ts -o openpkg.json      # Write to file
+openpkg snapshot src/index.ts -o -                  # Stdout (pipeable)
+openpkg snapshot src/index.ts --runtime             # Enable Zod/Valibot extraction
+openpkg snapshot src/index.ts --only "use*,create*" # Filter exports
+openpkg snapshot src/index.ts --ignore "*Internal"  # Exclude exports
+openpkg snapshot src/index.ts --max-depth 4         # Type depth limit
+openpkg snapshot src/index.ts --verify              # Exit 1 if any fail
+```
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output <file>` | Output file (default: openpkg.json, `-` for stdout) |
+| `--max-depth <n>` | Max type depth (default: 4) |
+| `--skip-resolve` | Skip external type resolution |
+| `--runtime` | Enable Standard Schema runtime extraction (Zod, Valibot) |
+| `--only <exports>` | Filter exports (comma-separated, wildcards) |
+| `--ignore <exports>` | Ignore exports (comma-separated, wildcards) |
+| `--verify` | Exit 1 if any exports fail |
+
+#### docs — Generate documentation from spec
+
+```bash
+openpkg docs openpkg.json -o api.md              # Markdown (default)
+openpkg docs openpkg.json -f html -o api.html    # HTML
+openpkg docs openpkg.json -f json                # JSON (simplified)
+openpkg docs openpkg.json --split -o docs/api/   # One file per export
+openpkg snapshot src/index.ts -o - | openpkg docs - -f md  # Pipeline
+```
+
+#### diff — Compare specs for breaking changes
+
+```bash
+openpkg diff old.json new.json
+openpkg diff old.json new.json --summary
+# Output: breaking, added, removed, changed, docsOnly, summary.semverBump
+```
+
+### Static vs Runtime Extraction
+
+**CRITICAL**: Static analysis misses runtime constraints from schema libraries.
+
+```typescript
+// Source: z.string().email().min(3)
+```
+
+**Static only** (no `--runtime`):
+```json
+{ "type": "string" }
+```
+
+**With `--runtime`**:
+```json
+{ "type": "string", "format": "email", "minLength": 3 }
+```
+
+The `--runtime` flag:
+- Detects TypeScript runtimes (bun, tsx, Node 22+)
+- Executes entry file
+- Finds Standard JSON Schema exports (`schema['~standard'].jsonSchema`)
+- Merges runtime schemas with static analysis
+
+**Always use `--runtime` when documenting packages with Zod, Valibot, ArkType, or TypeBox.**
 
 ### How It Works
 
@@ -56,18 +141,78 @@ The spec is the intermediate format—validate it, diff it, or feed it to any re
 
 | Package | Description |
 |---------|-------------|
-| @openpkg-ts/cli | CLI tool. `openpkg snapshot`, `openpkg docs`, `openpkg diff` commands. |
-| @openpkg-ts/sdk | Programmatic SDK for extraction, rendering, and querying. |
-| @openpkg-ts/spec | Core specification types, JSON Schema validation, normalization, diffing. |
-| @openpkg-ts/react | React components for rendering API docs. Headless and styled variants. |
-| @openpkg-ts/adapters | Framework adapters (Fumadocs, Docusaurus, Mintlify). |
+| @openpkg-ts/cli | CLI: `list`, `get`, `snapshot`, `docs`, `diff` |
+| @openpkg-ts/sdk | Programmatic SDK for extraction, rendering, querying |
+| @openpkg-ts/spec | Spec types, validation, normalization, diffing, semver |
+| @openpkg-ts/react | React components (headless + styled with Tailwind v4) |
+| @openpkg-ts/ui | Low-level UI primitives (CodeHike, Radix) |
+| @openpkg-ts/adapters | Framework adapters (Fumadocs) |
+
+### SDK Primitives
+
+```typescript
+import { listExports, getExport, extractSpec, diffSpecs, createDocs } from '@openpkg-ts/sdk';
+
+// List exports
+const { exports } = await listExports({ entryFile: './src/index.ts' });
+
+// Get single export
+const { export: spec, types } = await getExport({ entryFile: './src/index.ts', exportName: 'myFunc' });
+
+// Extract full spec
+const { spec, diagnostics } = await extractSpec({
+  entryFile: './src/index.ts',
+  maxTypeDepth: 4,
+  only: ['use*'],
+  ignore: ['*Internal'],
+});
+
+// Generate docs
+const docs = createDocs(spec);
+const markdown = docs.toMarkdown();
+const html = docs.toHTML();
+```
+
+### Spec Utilities
+
+```typescript
+import { validateSpec, normalize, diffSpec, recommendSemverBump } from '@openpkg-ts/spec';
+
+validateSpec(spec);                    // Returns { ok, errors? }
+const normalized = normalize(spec);    // Consistent structure
+const diff = diffSpec(old, new);       // Compare specs
+const { bump, reason } = recommendSemverBump(diff);  // 'major' | 'minor' | 'patch'
+```
+
+### React Components
+
+```tsx
+// Styled (Tailwind v4)
+import { FullAPIReferencePage, FunctionPage, ClassPage } from '@openpkg-ts/react/styled';
+
+// Headless (unstyled)
+import { CollapsibleMethod, ParamTable, Signature } from '@openpkg-ts/react';
+```
+
+### Fumadocs Adapter
+
+```typescript
+import { loader } from 'fumadocs-core/source';
+import { openpkgSource, openpkgPlugin } from '@openpkg-ts/adapters/fumadocs';
+
+export const apiSource = loader({
+  baseUrl: '/docs/api',
+  source: openpkgSource({ spec }),
+  plugins: [openpkgPlugin()],
+});
+```
 
 ### Use Cases
 
-- Generate API documentation automatically from TypeScript
+- Generate API documentation from TypeScript
 - Detect breaking changes between versions
-- Build custom documentation sites
-- Integrate with existing doc frameworks
+- Build custom doc sites with React components
+- Integrate with Fumadocs, Docusaurus, Mintlify
 
 ---
 

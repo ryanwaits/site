@@ -178,8 +178,8 @@ export async function POST(request: Request) {
             maxTurns: 3,
             cwd: process.cwd(),
             settingSources: ['project'],
-            allowedTools: ['Read', 'Skill'],
-            disallowedTools: ['Bash', 'Edit', 'Write', 'Glob', 'Grep', 'Task', 'WebSearch', 'WebFetch'],
+            allowedTools: ['Read', 'Skill', 'WebFetch'],
+            disallowedTools: ['Bash', 'Edit', 'Write', 'Glob', 'Grep', 'Task', 'WebSearch'],
             pathToClaudeCodeExecutable: process.env.CLAUDE_CODE_PATH,
           },
         })
@@ -207,6 +207,14 @@ export async function POST(request: Request) {
                     kind: 'skill',
                     tool: 'Using',
                     detail: String(toolInput.skill || ''),
+                  }
+                } else if (toolName === 'WebFetch') {
+                  const url = String(toolInput.url || '')
+                  const hostname = url ? new URL(url).hostname : ''
+                  activity = {
+                    kind: 'tool',
+                    tool: 'Fetching',
+                    detail: hostname,
                   }
                 } else {
                   activity = {

@@ -224,9 +224,9 @@ function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isA
   }
 
   return (
-    <div className="pl-4 space-y-1 text-xs mb-2">
+    <div className="pl-3 space-y-1 text-xs mb-2 overflow-hidden">
       {activities.map((activity, i) => (
-        <div key={i} className="flex items-center gap-2 text-[var(--console-muted)]">
+        <div key={i} className="flex items-center gap-2 text-[var(--console-muted)] overflow-hidden">
           {activity.type === 'thinking' ? (
             <>
               <Spinner />
@@ -234,10 +234,10 @@ function ActivityDisplay({ activities, isActive }: { activities: Activity[]; isA
             </>
           ) : (
             <>
-              <span className={getActivityStyle(activity.type)}>{getActivityIcon(activity.type)}</span>
-              <span>{activity.tool}</span>
+              <span className={`shrink-0 ${getActivityStyle(activity.type)}`}>{getActivityIcon(activity.type)}</span>
+              <span className="shrink-0">{activity.tool}</span>
               {activity.detail && (
-                <span className="opacity-60">{activity.detail}</span>
+                <span className="opacity-60 truncate min-w-0">{activity.detail}</span>
               )}
             </>
           )}
@@ -1173,7 +1173,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       }}
     >
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-[var(--console-content-bg)]">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 text-xs bg-[var(--console-content-bg)]">
         {messages.length === 0 && (
           <div className="text-[var(--console-muted)]">
             <p className="text-[11px] whitespace-pre-line">{WELCOME_TEXT}</p>
@@ -1199,7 +1199,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
                   {!showCurrentActivities && showActivities && (
                     <ActivityDisplay activities={msg.activities!} isActive={false} />
                   )}
-                  <div className="pl-4 leading-relaxed console-markdown-light">
+                  <div className="pl-3 leading-relaxed console-markdown-light overflow-x-hidden">
                     {msg.view ? (
                       <InlineView view={msg.view} />
                     ) : msg.content ? (
@@ -1228,17 +1228,17 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-[var(--color-border)] p-3 bg-[var(--console-content-bg)]">
-        <div className="flex items-start gap-2">
+      <div className="border-t border-[var(--color-border)] p-3 bg-[var(--console-content-bg)] overflow-hidden">
+        <div className="flex items-start gap-2 max-w-full">
           <span className={`leading-[1.4] ${sandboxBooting ? 'text-[var(--console-muted)] opacity-50' : 'text-[var(--console-accent)]'}`}>❯</span>
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={sandboxBooting ? "Initializing agent..." : "Ask anything, try /... or @..."}
+            placeholder={sandboxBooting ? "Initializing agent..." : "Ask anything..."}
             disabled={isStreaming || sandboxBooting}
-            className={`flex-1 bg-transparent outline-none resize-none text-xs leading-[1.4] overflow-y-auto ${
+            className={`flex-1 min-w-0 bg-transparent outline-none resize-none text-xs leading-[1.4] overflow-y-auto break-words ${
               sandboxBooting
                 ? 'text-[var(--console-muted)] placeholder-[var(--console-muted)] opacity-50'
                 : 'text-[var(--console-text)] placeholder-[var(--console-muted)]'
@@ -1254,21 +1254,21 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
       {/* Command Typeahead */}
       {showTypeahead && filteredCommands.length > 0 && (
-        <div ref={typeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+        <div ref={typeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto overflow-x-hidden">
           {filteredCommands.map((cmd, idx) => (
             <div
               key={cmd.name}
               data-index={idx}
               onClick={() => selectTypeaheadCommand(cmd)}
-              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+              className={`px-3 py-2 cursor-pointer flex items-center gap-2 text-xs font-mono ${
                 idx === typeaheadIndex
                   ? 'bg-[var(--console-accent)]/10'
                   : 'hover:bg-[var(--console-accent)]/5'
               }`}
             >
-              <span className="text-[var(--console-accent)] w-24 shrink-0">/{cmd.name}</span>
-              <span className="text-[var(--console-muted)] truncate">{cmd.description}</span>
-              <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
+              <span className="text-[var(--console-accent)] shrink-0">/{cmd.name}</span>
+              <span className="text-[var(--console-muted)] truncate flex-1 min-w-0">{cmd.description}</span>
+              <span className="text-[var(--console-muted)] opacity-50 shrink-0 text-[10px] hidden sm:inline">
                 {cmd.type === 'client' ? 'instant' : 'agent'}
               </span>
             </div>
@@ -1278,21 +1278,21 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
       {/* @Mention Typeahead */}
       {showMentionTypeahead && filteredPosts.length > 0 && (
-        <div ref={mentionTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+        <div ref={mentionTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto overflow-x-hidden">
           {filteredPosts.map((post, idx) => (
             <div
               key={post.slug}
               data-index={idx}
               onClick={() => selectMention(post)}
-              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+              className={`px-3 py-2 cursor-pointer flex items-center gap-2 text-xs font-mono ${
                 idx === mentionTypeaheadIndex
                   ? 'bg-[var(--console-accent)]/10'
                   : 'hover:bg-[var(--console-accent)]/5'
               }`}
             >
               <span className="text-[#7aa2f7] shrink-0">@{post.slug}</span>
-              <span className="text-[var(--console-muted)] truncate">{post.title}</span>
-              <span className="text-[var(--console-muted)] opacity-50 ml-auto text-[10px]">
+              <span className="text-[var(--console-muted)] truncate flex-1 min-w-0">{post.title}</span>
+              <span className="text-[var(--console-muted)] opacity-50 shrink-0 text-[10px] hidden sm:inline">
                 {post.date}
               </span>
             </div>
@@ -1302,22 +1302,22 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
       {/* Effect Subcommand Typeahead */}
       {showEffectTypeahead && filteredEffects.length > 0 && (
-        <div ref={effectTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+        <div ref={effectTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto overflow-x-hidden">
           {filteredEffects.map((effect, idx) => (
             <div
               key={effect.name}
               data-index={idx}
               onClick={() => selectEffect(effect, true)}
-              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+              className={`px-3 py-2 cursor-pointer flex items-center gap-2 text-xs font-mono ${
                 idx === effectTypeaheadIndex
                   ? 'bg-[var(--console-accent)]/10'
                   : 'hover:bg-[var(--console-accent)]/5'
               }`}
             >
-              <span className="text-[var(--console-muted)] opacity-60 w-8 text-center tracking-tighter">{effect.hint}</span>
+              <span className="text-[var(--console-muted)] opacity-60 shrink-0 text-center tracking-tighter">{effect.hint}</span>
               <span className="text-[var(--console-accent)] shrink-0">{effect.name}</span>
-              <span className="text-[var(--console-muted)] truncate">{effect.description}</span>
-              <span className="text-[var(--console-muted)] opacity-40 ml-auto text-[10px]">tab ↹</span>
+              <span className="text-[var(--console-muted)] truncate flex-1 min-w-0">{effect.description}</span>
+              <span className="text-[var(--console-muted)] opacity-40 shrink-0 text-[10px] hidden sm:inline">tab ↹</span>
             </div>
           ))}
         </div>
@@ -1325,22 +1325,22 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
       {/* Theme Subcommand Typeahead */}
       {showThemeTypeahead && filteredThemes.length > 0 && (
-        <div ref={themeTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+        <div ref={themeTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto overflow-x-hidden">
           {filteredThemes.map((theme, idx) => (
             <div
               key={theme.name}
               data-index={idx}
               onClick={() => selectTheme(theme, true)}
-              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+              className={`px-3 py-2 cursor-pointer flex items-center gap-2 text-xs font-mono ${
                 idx === themeTypeaheadIndex
                   ? 'bg-[var(--console-accent)]/10'
                   : 'hover:bg-[var(--console-accent)]/5'
               }`}
             >
-              <span className="text-[var(--console-muted)] opacity-60 w-8 text-center tracking-tighter">{theme.hint}</span>
+              <span className="text-[var(--console-muted)] opacity-60 shrink-0 text-center tracking-tighter">{theme.hint}</span>
               <span className="text-[var(--console-accent)] shrink-0">{theme.name}</span>
-              <span className="text-[var(--console-muted)] truncate">{theme.description}</span>
-              <span className="text-[var(--console-muted)] opacity-40 ml-auto text-[10px]">tab ↹</span>
+              <span className="text-[var(--console-muted)] truncate flex-1 min-w-0">{theme.description}</span>
+              <span className="text-[var(--console-muted)] opacity-40 shrink-0 text-[10px] hidden sm:inline">tab ↹</span>
             </div>
           ))}
         </div>
@@ -1363,7 +1363,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
         {/* Drawer - full width, respects safe areas */}
         <div
           data-console
-          className={`fixed inset-x-0 bottom-0 z-50 font-mono text-sm transition-transform duration-300 ease-out ${
+          className={`fixed inset-x-0 bottom-0 z-50 font-mono text-sm transition-transform duration-300 ease-out overflow-x-hidden ${
             isClosing ? 'translate-y-full' : 'translate-y-0'
           }`}
           style={{
@@ -1412,7 +1412,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
             </div>
 
             {/* Content */}
-            <div className="flex-1 min-h-0 flex flex-col border border-[var(--color-text)] overflow-hidden">
+            <div className="flex-1 min-h-0 flex flex-col border border-[var(--color-text)] overflow-hidden max-w-full">
               {renderConsoleContent()}
             </div>
           </div>
