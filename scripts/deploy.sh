@@ -5,7 +5,8 @@ APP_DIR="${APP_DIR:-$HOME/app}"
 cd "$APP_DIR"
 
 echo "==> Pulling latest code..."
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 
 echo "==> Installing dependencies..."
 if command -v bun &> /dev/null; then
