@@ -41,7 +41,7 @@ const MIN_SIZE = { width: 400, height: 300 }
 
 // Hook to detect mobile viewport
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState<boolean | null>(null)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -1144,6 +1144,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     }
   }
 
+  // Console closed - show toggle button (unless hideButton)
   if (!isOpen) {
     if (hideButton) return null
     return (
@@ -1154,6 +1155,12 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
         [A] Agent
       </button>
     )
+  }
+
+  // Console open but isMobile not yet detected - render nothing to prevent flash
+  // (avoids desktop layout briefly rendering on mobile causing horizontal overflow)
+  if (isMobile === null) {
+    return null
   }
 
   const sandboxReady = sandboxStatus === 'ready' || sandboxStatus === 'idle'
