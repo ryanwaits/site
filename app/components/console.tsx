@@ -688,12 +688,12 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     return () => window.removeEventListener('agent-prefill', handlePrefill)
   }, [])
 
-  // Focus input when opening
+  // Focus input when opening (desktop only - mobile focuses on tap to avoid keyboard issues)
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (isOpen && inputRef.current && !isMobile) {
       inputRef.current.focus()
     }
-  }, [isOpen])
+  }, [isOpen, isMobile])
 
   // Scroll to bottom on new messages, activities, or when opening
   useEffect(() => {
@@ -1355,73 +1355,216 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     </div>
   )
 
-  // Mobile: Full-width bottom drawer with safe area support
+  // Mobile: Slim input bar with floating message overlay
   if (isMobile) {
+    const hasMessages = messages.length > 0 || isStreaming
+
+    // Calculate input bar height for message card positioning
+    const inputBarHeight = 52 // ~44px input + 8px margin
+
     return (
       <>
-        {/* Backdrop */}
-        <div
-          className={`fixed inset-0 z-50 bg-black/60 transition-opacity duration-300 ${
-            isClosing ? 'opacity-0' : 'opacity-100'
-          }`}
-          onClick={handleClose}
-        />
+        {/* Backdrop - only when messages visible */}
+        {hasMessages && (
+          <div
+            className={`fixed inset-0 z-40 transition-opacity duration-200 ${
+              isClosing ? 'opacity-0' : 'opacity-100'
+            }`}
+            onClick={handleClose}
+          />
+        )}
 
-        {/* Drawer - full width, respects safe areas */}
+        {/* Floating message card - positioned above input bar */}
+        {hasMessages && (
+          <div
+            data-console
+            className={`fixed inset-x-0 z-50 font-mono text-xs transition-all duration-200 ${
+              isClosing ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+            }`}
+            style={{
+              bottom: `calc(${inputBarHeight}px + env(safe-area-inset-bottom, 0px))`,
+              maxHeight: '50vh',
+              marginLeft: 'max(12px, env(safe-area-inset-left, 12px))',
+              marginRight: 'max(12px, env(safe-area-inset-right, 12px))',
+            }}
+          >
+            <div className="bg-[var(--console-content-bg)] border border-[var(--color-text)] max-h-[50vh] overflow-y-auto">
+            {/* Messages */}
+            <div className="p-3 space-y-3">
+              {messages.map((msg, i) => {
+                const isLastMessage = i === messages.length - 1
+                const showActivities = msg.role === 'assistant' && msg.activities && msg.activities.length > 0
+                const showCurrentActivities = isLastMessage && isStreaming && currentActivities.length > 0
+
+                return (
+                  <div key={i} className={msg.role === 'user' ? 'text-[var(--console-muted)]' : 'text-[var(--console-text)]'}>
+                    {msg.role === 'user' ? (
+                      <div className="flex items-start gap-2">
+                        <span className="text-[var(--console-accent)]">❯</span>
+                        <span>{msg.content}</span>
+                      </div>
+                    ) : (
+                      <>
+                        {showCurrentActivities && (
+                          <ActivityDisplay activities={currentActivities} isActive={isStreaming} />
+                        )}
+                        {!showCurrentActivities && showActivities && (
+                          <ActivityDisplay activities={msg.activities!} isActive={false} />
+                        )}
+                        <div className="pl-3 leading-relaxed console-markdown-light overflow-x-hidden">
+                          {msg.view ? (
+                            <InlineView view={msg.view} />
+                          ) : msg.content ? (
+                            <Streamdown
+                              mode={isLastMessage && isStreaming ? 'streaming' : 'static'}
+                              isAnimating={isLastMessage && isStreaming}
+                              caret="block"
+                              controls={false}
+                              components={markdownComponents}
+                              className="text-xs"
+                            >
+                              {msg.content}
+                            </Streamdown>
+                          ) : (
+                            isLastMessage && isStreaming && currentActivities.length === 0 && (
+                              <span className="text-[var(--console-muted)]">...</span>
+                            )
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+            </div>
+          </div>
+        )}
+
+        {/* Input bar - separate fixed element at bottom */}
         <div
           data-console
-          className={`fixed inset-x-0 bottom-0 z-50 font-mono text-sm transition-transform duration-300 ease-out overflow-x-hidden ${
-            isClosing ? 'translate-y-full' : 'translate-y-0'
+          className={`fixed inset-x-0 bottom-0 z-50 font-mono text-xs transition-opacity duration-200 ${
+            isClosing ? 'opacity-0' : 'opacity-100'
           }`}
           style={{
-            height: 'calc(70vh - env(safe-area-inset-top, 0px))',
-            maxHeight: '500px',
-            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            paddingLeft: 'max(12px, env(safe-area-inset-left, 12px))',
+            paddingRight: 'max(12px, env(safe-area-inset-right, 12px))',
+            paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
           }}
         >
-          <div className="h-full flex flex-col bg-[var(--console-outer-bg)] border-t border-x border-[var(--color-text)] p-1">
-            {/* Drag handle indicator */}
-            <div className="flex justify-center py-1">
-              <div className="w-10 h-1 bg-[var(--color-muted)] rounded-full opacity-50" />
-            </div>
+          <div className="bg-[var(--console-content-bg)] border border-[var(--color-text)]">
+          <div className="flex items-center gap-2 px-3 py-2.5">
+            {/* Terminal prompt */}
+            <span className={`shrink-0 ${sandboxBooting ? 'text-[var(--console-muted)] opacity-50' : 'text-[var(--console-accent)]'}`}>
+              ❯
+            </span>
 
-            {/* Chrome Title Bar */}
-            <div className="flex-shrink-0 flex items-center gap-3 px-1 py-1">
-              {/* Console Icon */}
-              <div className="p-0.5 text-[var(--color-text)]">
-                <svg width="14" height="14" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M11 0H1V1H0V11H1V12H11V11H12V1H11V0ZM11 1V11H1V1H11ZM6 7H10V8H6V7ZM3 7H2V8H3V7ZM4 6V7H3V6H4ZM4 5V6H5V5H4ZM3 4H4V5H3V4ZM3 4V3H2V4H3Z" fill="currentColor"/>
-                </svg>
-              </div>
+            {/* Input */}
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={sandboxBooting ? "Starting..." : "Ask anything..."}
+              disabled={isStreaming || sandboxBooting}
+              className={`flex-1 min-w-0 bg-transparent outline-none resize-none text-xs leading-[1.4] ${
+                sandboxBooting
+                  ? 'text-[var(--console-muted)] placeholder-[var(--console-muted)] opacity-50'
+                  : 'text-[var(--console-text)] placeholder-[var(--console-muted)]'
+              }`}
+              rows={1}
+              style={{ maxHeight: '60px' }}
+            />
 
-              {/* Horizontal line */}
-              <div className="flex-1 h-px bg-[var(--color-muted)]" />
-
-              {/* Title Label or Progress */}
-              {sandboxBooting ? (
-                <HeaderProgress />
-              ) : (
-                <span className="text-[11px] text-[var(--color-text)] tracking-[0.15em] uppercase font-medium whitespace-nowrap">[ Agent ]</span>
-              )}
-
-              {/* Horizontal line */}
-              <div className="flex-1 h-px bg-[var(--color-muted)]" />
-
-              {/* Close Icon - larger touch target for mobile */}
+            {/* Status/Close */}
+            {isStreaming ? (
+              <span className="text-[var(--console-accent)] animate-pulse">●</span>
+            ) : (
               <button
                 onClick={handleClose}
-                className="p-2 -m-1 hover:opacity-60 transition-opacity text-[var(--color-text)]"
+                className="p-1 -m-1 text-[var(--console-muted)] active:opacity-60"
               >
-                <svg width="14" height="14" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" strokeWidth="1.5"/>
                 </svg>
               </button>
-            </div>
+            )}
+          </div>
 
-            {/* Content */}
-            <div className="flex-1 min-h-0 flex flex-col border border-[var(--color-text)] overflow-hidden max-w-full">
-              {renderConsoleContent()}
+          {/* Typeahead panels */}
+          {showTypeahead && filteredCommands.length > 0 && (
+            <div ref={typeaheadRef} className="border-t border-[var(--color-border)] max-h-[120px] overflow-y-auto">
+              {filteredCommands.map((cmd, idx) => (
+                <div
+                  key={cmd.name}
+                  data-index={idx}
+                  onClick={() => selectTypeaheadCommand(cmd)}
+                  className={`px-3 py-2 flex items-center gap-2 ${
+                    idx === typeaheadIndex ? 'bg-[var(--console-accent)]/10' : ''
+                  }`}
+                >
+                  <span className="text-[var(--console-accent)]">/{cmd.name}</span>
+                  <span className="text-[var(--console-muted)] truncate">{cmd.description}</span>
+                </div>
+              ))}
             </div>
+          )}
+
+          {showMentionTypeahead && filteredPosts.length > 0 && (
+            <div ref={mentionTypeaheadRef} className="border-t border-[var(--color-border)] max-h-[120px] overflow-y-auto">
+              {filteredPosts.map((post, idx) => (
+                <div
+                  key={post.slug}
+                  data-index={idx}
+                  onClick={() => selectMention(post)}
+                  className={`px-3 py-2 flex items-center gap-2 ${
+                    idx === mentionTypeaheadIndex ? 'bg-[var(--console-accent)]/10' : ''
+                  }`}
+                >
+                  <span className="text-[#7aa2f7]">@{post.slug}</span>
+                  <span className="text-[var(--console-muted)] truncate">{post.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showEffectTypeahead && filteredEffects.length > 0 && (
+            <div ref={effectTypeaheadRef} className="border-t border-[var(--color-border)] max-h-[120px] overflow-y-auto">
+              {filteredEffects.map((effect, idx) => (
+                <div
+                  key={effect.name}
+                  data-index={idx}
+                  onClick={() => selectEffect(effect, true)}
+                  className={`px-3 py-2 flex items-center gap-2 ${
+                    idx === effectTypeaheadIndex ? 'bg-[var(--console-accent)]/10' : ''
+                  }`}
+                >
+                  <span className="text-[var(--console-muted)] opacity-60">{effect.hint}</span>
+                  <span className="text-[var(--console-accent)]">{effect.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showThemeTypeahead && filteredThemes.length > 0 && (
+            <div ref={themeTypeaheadRef} className="border-t border-[var(--color-border)] max-h-[120px] overflow-y-auto">
+              {filteredThemes.map((theme, idx) => (
+                <div
+                  key={theme.name}
+                  data-index={idx}
+                  onClick={() => selectTheme(theme, true)}
+                  className={`px-3 py-2 flex items-center gap-2 ${
+                    idx === themeTypeaheadIndex ? 'bg-[var(--console-accent)]/10' : ''
+                  }`}
+                >
+                  <span className="text-[var(--console-muted)] opacity-60">{theme.hint}</span>
+                  <span className="text-[var(--console-accent)]">{theme.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
           </div>
         </div>
       </>
