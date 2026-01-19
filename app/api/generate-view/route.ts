@@ -86,6 +86,7 @@ export async function POST(request: Request) {
             allowedTools: [],
             disallowedTools: ['Bash', 'Edit', 'Write', 'Read', 'Glob', 'Grep', 'Task'],
             outputFormat: { type: 'json_schema', schema: viewSchema },
+            pathToClaudeCodeExecutable: '/usr/bin/claude',
           },
         })
 
