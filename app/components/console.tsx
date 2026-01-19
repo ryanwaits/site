@@ -54,8 +54,7 @@ function useIsMobile() {
 }
 
 // Simple welcome text
-const WELCOME_TEXT = `Claude Agent SDK v0.2.7
-Sonnet 4`
+const WELCOME_TEXT = ``
 
 // Custom markdown components - uses CSS variables for theming
 const markdownComponents = {
@@ -845,6 +844,8 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
         } finally {
           setIsStreaming(false)
           setCurrentActivities([])
+          // Re-focus input after view generation
+          setTimeout(() => inputRef.current?.focus(), 0)
         }
         return
       }
@@ -856,6 +857,8 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
         if (response) {
           setMessages(prev => [...prev, { role: 'assistant', content: response }])
         }
+        // Re-focus input after client command
+        setTimeout(() => inputRef.current?.focus(), 0)
         return
       }
     }
@@ -986,6 +989,8 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     } finally {
       setIsStreaming(false)
       setCurrentActivities([])
+      // Re-focus input after response completes
+      setTimeout(() => inputRef.current?.focus(), 0)
     }
   }
 

@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { SiteNav } from '../../components/site-nav'
-import { SiteFooter } from '../../components/site-footer'
 import { TerminalFrame } from '../../components/terminal-frame'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { highlight } from 'sugar-high'
 
@@ -13,6 +13,7 @@ const PROJECTS: Record<string, {
   name: string
   tagline: string
   status: string
+  github: string
   sections: Array<{
     id: string
     title: string
@@ -28,6 +29,7 @@ const PROJECTS: Record<string, {
     name: 'doccov',
     tagline: 'Codecov for documentation',
     status: 'MVP',
+    github: 'https://github.com/ryanwaits/doccov',
     sections: [
       {
         id: 'problem',
@@ -46,11 +48,6 @@ You ship a library with 50 exports. How many are documented? Which ones are miss
             'export function transform(input) {',
             '  // ... complex transformation',
             '}',
-            '',
-            '// 48 more exports...',
-            '',
-            '// Question: How many are documented?',
-            '// Answer: ¯\\_(ツ)_/¯',
           ]
         }
       },
@@ -80,22 +77,18 @@ Every exported function, class, type, and interface. Every parameter and return 
 Broken down by file. Broken down by export type. Actionable warnings for every gap.`,
         terminal: {
           output: [
-            '┌─────────────────────────────────────────┐',
-            '│ DOCCOV COVERAGE REPORT                  │',
-            '├─────────────────────────────────────────┤',
-            '│                                         │',
-            '│ Overall:  ████████░░░░░░░░░░░░  42%    │',
-            '│                                         │',
-            '│ Functions ████████████░░░░░░░░  58%    │',
-            '│ Classes   ██████░░░░░░░░░░░░░░  31%    │',
-            '│ Types     ████████████████░░░░  78%    │',
-            '│ Interfaces████████░░░░░░░░░░░░  45%    │',
-            '│                                         │',
-            '├─────────────────────────────────────────┤',
-            '│ ⚠ 23 exports missing documentation     │',
-            '│ ⚠ 12 functions missing @param          │',
-            '│ ⚠ 8 functions missing @returns         │',
-            '└─────────────────────────────────────────┘',
+            'DOCCOV COVERAGE REPORT',
+            '',
+            'Overall:    ████████░░░░░░░░░░░░  42%',
+            '',
+            'Functions   ████████████░░░░░░░░  58%',
+            'Classes     ██████░░░░░░░░░░░░░░  31%',
+            'Types       ████████████████░░░░  78%',
+            'Interfaces  ████████░░░░░░░░░░░░  45%',
+            '',
+            '⚠ 23 exports missing documentation',
+            '⚠ 12 functions missing @param',
+            '⚠ 8 functions missing @returns',
           ]
         }
       },
@@ -107,8 +100,6 @@ Broken down by file. Broken down by export type. Actionable warnings for every g
 Same workflow as code coverage. Documentation becomes a first-class quality metric.`,
         terminal: {
           output: [
-            '# .github/workflows/docs.yml',
-            '',
             'name: Documentation Coverage',
             'on: [push, pull_request]',
             '',
@@ -153,6 +144,7 @@ Started as 2000 lines of TypeScript. Now it's 100 lines of prompts. Deleted 95% 
     name: 'secondlayer',
     tagline: 'Type-safe Clarity contract interfaces',
     status: 'Stable',
+    github: 'https://github.com/ryanwaits/secondlayer',
     sections: [
       {
         id: 'problem',
@@ -273,6 +265,7 @@ Pick what you need. Skip what you don't.`,
     name: 'openpkg',
     tagline: 'OpenAPI for TypeScript packages',
     status: 'Stable',
+    github: 'https://github.com/ryanwaits/openpkg',
     sections: [
       {
         id: 'problem',
@@ -385,6 +378,9 @@ The whole point: agents need to understand your API surface in one pass. Not ski
   },
 }
 
+// Order of projects for navigation (matches lib/projects.ts)
+const PROJECT_ORDER = ['openpkg', 'doccov', 'secondlayer']
+
 // Terminal component with typing animation and syntax highlighting
 function Terminal({ data, isActive }: {
   data: { command?: string; output: string[]; typing?: boolean }
@@ -451,13 +447,38 @@ function Terminal({ data, isActive }: {
 
 export default function ProjectPage() {
   const params = useParams()
+  const router = useRouter()
   const slug = params.slug as string
   const project = PROJECTS[slug]
+
+  // Navigation between projects
+  const currentIndex = PROJECT_ORDER.indexOf(slug)
+  const prevSlug = currentIndex > 0 ? PROJECT_ORDER[currentIndex - 1] : null
+  const nextSlug = currentIndex < PROJECT_ORDER.length - 1 ? PROJECT_ORDER[currentIndex + 1] : null
+  const prevProject = prevSlug ? PROJECTS[prevSlug] : null
+  const nextProject = nextSlug ? PROJECTS[nextSlug] : null
 
   const [activeSection, setActiveSection] = useState(0)
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([])
   const headerRef = useRef<HTMLDivElement>(null)
+
+  // Keyboard navigation between projects
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+
+      if (e.key === 'ArrowLeft' && prevSlug) {
+        router.push(`/work/${prevSlug}`)
+      } else if (e.key === 'ArrowRight' && nextSlug) {
+        router.push(`/work/${nextSlug}`)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [router, prevSlug, nextSlug])
 
   // Track header visibility for sticky header
   useEffect(() => {
@@ -508,7 +529,6 @@ export default function ProjectPage() {
         <main className="flex-1 flex items-center justify-center">
           <p className="font-mono text-[var(--color-muted)]">Project not found</p>
         </main>
-        <SiteFooter />
       </div>
     )
   }
@@ -524,9 +544,14 @@ export default function ProjectPage() {
             <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 bg-[var(--color-text)] text-[var(--color-bg)]">
               {project.status}
             </span>
-            <h1 className="font-mono text-sm text-[var(--color-text)]">
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-sm text-[var(--color-text)] hover:underline"
+            >
               {project.name}
-            </h1>
+            </a>
             <span className="text-[var(--color-muted)]">—</span>
             <p className="font-mono text-xs text-[var(--color-muted)]">
               {project.tagline}
@@ -544,9 +569,14 @@ export default function ProjectPage() {
                 {project.status}
               </span>
             </div>
-            <h1 className="font-mono text-2xl text-[var(--color-text)] mb-1">
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-2xl text-[var(--color-text)] hover:underline"
+            >
               {project.name}
-            </h1>
+            </a>
             <p className="font-mono text-sm text-[var(--color-muted)]">
               {project.tagline}
             </p>
@@ -554,8 +584,8 @@ export default function ProjectPage() {
         </div>
 
         {/* Scrollytelling content */}
-        <div className="max-w-6xl mx-auto md:ml-[72px] px-6">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-12 relative">
+        <div className="md:ml-[72px] px-6 lg:pr-[72px]">
+          <div className="lg:grid lg:grid-cols-[minmax(0,540px)_1fr] lg:gap-16 xl:gap-24 relative">
 
             {/* Left: Narrative sections */}
             <div className="py-12 space-y-32">
@@ -624,7 +654,38 @@ export default function ProjectPage() {
         </div>
       </main>
 
-      <SiteFooter />
+      {/* Footer with project navigation */}
+      <footer className="flex-shrink-0 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
+        <div className="max-w-6xl mx-auto md:ml-[72px] px-6 py-4">
+          <div className="flex justify-between items-center">
+            {/* Prev */}
+            {prevProject ? (
+              <Link
+                href={`/work/${prevSlug}`}
+                className="group flex items-center gap-2 font-mono text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
+              >
+                <span className="opacity-50">←</span>
+                <span>{prevProject.name}</span>
+              </Link>
+            ) : (
+              <div />
+            )}
+
+            {/* Next */}
+            {nextProject ? (
+              <Link
+                href={`/work/${nextSlug}`}
+                className="group flex items-center gap-2 font-mono text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
+              >
+                <span>{nextProject.name}</span>
+                <span className="opacity-50">→</span>
+              </Link>
+            ) : (
+              <div />
+            )}
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
