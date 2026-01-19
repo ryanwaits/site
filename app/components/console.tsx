@@ -291,21 +291,26 @@ interface ConsoleProps {
 const COMMAND_REGISTRY: Array<{
   name: string
   description: string
-  type: 'client' | 'server'
+  type: 'client'
   args?: string
 }> = [
-  // Client commands (instant)
   { name: 'help', description: 'Show available commands', type: 'client' },
   { name: 'clear', description: 'Clear console history', type: 'client' },
   { name: 'toggle-theme', description: 'Toggle dark/light mode', type: 'client' },
-  { name: 'matrix', description: 'Enter the Matrix', type: 'client' },
-  { name: 'confetti', description: 'Celebrate!', type: 'client' },
+  { name: 'effect', description: 'Visual effects', type: 'client', args: '<name>' },
   { name: 'view', description: 'Generate a custom view', type: 'client', args: '<prompt>' },
-  // Server commands (sent to Claude)
-  { name: 'about', description: 'About Ryan Waits', type: 'server' },
-  { name: 'work', description: 'Work history and projects', type: 'server' },
-  { name: 'words', description: 'List of writings', type: 'server' },
-  { name: 'read', description: 'Read and discuss a blog post', type: 'server', args: '<slug>' },
+]
+
+// Effect subcommands with visual hints
+const EFFECT_REGISTRY: Array<{
+  name: string
+  description: string
+  hint: string // ASCII/emoji visual hint
+}> = [
+  { name: 'matrix', description: 'Digital rain', hint: '░▒▓' },
+  { name: 'interstellar', description: 'Gravitational waves', hint: '◠◡◠' },
+  { name: 'pluribus', description: 'E pluribus unum', hint: '✦✧✦' },
+  { name: 'true detective', description: 'Time is a flat circle', hint: '◯─◯' },
 ]
 
 // Client-side commands - bypass API for instant response
@@ -315,9 +320,8 @@ const CLIENT_COMMANDS: Record<string, (args: string, helpers: {
   onCommand?: (action: string, value: string) => void
 }) => string | null> = {
   help: () => {
-    const clientCmds = COMMAND_REGISTRY.filter(c => c.type === 'client')
-    const serverCmds = COMMAND_REGISTRY.filter(c => c.type === 'server')
-    return `## Commands\n\n**Instant**\n${clientCmds.map(c => `- \`/${c.name}${c.args ? ' ' + c.args : ''}\` - ${c.description}`).join('\n')}\n\n**Agent**\n${serverCmds.map(c => `- \`/${c.name}${c.args ? ' ' + c.args : ''}\` - ${c.description}`).join('\n')}\n\nOr just ask anything.`
+    const effectList = EFFECT_REGISTRY.map(e => `\`${e.name}\``).join(', ')
+    return `## Commands\n\n${COMMAND_REGISTRY.map(c => `- \`/${c.name}${c.args ? ' ' + c.args : ''}\` - ${c.description}`).join('\n')}\n\n**Effects:** ${effectList}\n\nOr just ask anything.`
   },
 
   clear: (_, { setMessages }) => {
@@ -332,14 +336,24 @@ const CLIENT_COMMANDS: Record<string, (args: string, helpers: {
     return `Switched to ${newTheme} mode.`
   },
 
-  matrix: (_, { onCommand }) => {
-    onCommand?.('matrix', 'on')
-    return 'Wake up, Neo...'
-  },
-
-  confetti: (_, { onCommand }) => {
-    onCommand?.('confetti', 'on')
-    return 'Celebrate!'
+  effect: (args, { onCommand }) => {
+    const effectName = args.trim().toLowerCase()
+    const effect = EFFECT_REGISTRY.find(e => e.name.toLowerCase() === effectName)
+    if (!effect) {
+      const available = EFFECT_REGISTRY.map(e => `\`${e.name}\``).join(', ')
+      return `Unknown effect. Available: ${available}`
+    }
+    // Map effect name to action (normalize spaces to hyphens for the handler)
+    const actionName = effect.name.replace(/\s+/g, '-')
+    onCommand?.(actionName, 'on')
+    // Return flavor text based on effect
+    const flavorText: Record<string, string> = {
+      'matrix': 'Wake up, Neo...',
+      'interstellar': 'Do not go gentle into that good night.',
+      'pluribus': 'Out of many, one.',
+      'true detective': 'Time is a flat circle.',
+    }
+    return flavorText[effect.name] || `${effect.name} activated.`
   },
 }
 
@@ -355,6 +369,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [typeaheadIndex, setTypeaheadIndex] = useState(0)
   const [mentionTypeaheadIndex, setMentionTypeaheadIndex] = useState(0)
+  const [effectTypeaheadIndex, setEffectTypeaheadIndex] = useState(0)
   const [posts, setPosts] = useState<Post[]>([])
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('idle')
 
@@ -438,6 +453,14 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     ? posts.filter(p => p.slug.toLowerCase().includes(mentionQuery) || p.title.toLowerCase().includes(mentionQuery))
     : []
 
+  // Compute /effect subcommand typeahead
+  const effectMatch = input.match(/^\/effect\s+(.*)$/i)
+  const showEffectTypeahead = effectMatch !== null
+  const effectQuery = effectMatch ? effectMatch[1].toLowerCase() : ''
+  const filteredEffects = showEffectTypeahead
+    ? EFFECT_REGISTRY.filter(e => e.name.toLowerCase().startsWith(effectQuery))
+    : []
+
   // Reset typeahead index when filtered results change
   useEffect(() => {
     setTypeaheadIndex(0)
@@ -446,6 +469,10 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   useEffect(() => {
     setMentionTypeaheadIndex(0)
   }, [mentionQuery])
+
+  useEffect(() => {
+    setEffectTypeaheadIndex(0)
+  }, [effectQuery])
 
   // Scroll selected typeahead option into view
   useEffect(() => {
@@ -926,7 +953,44 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     setInput(newInput)
   }
 
+  const selectEffect = (effect: typeof EFFECT_REGISTRY[0], submit = false) => {
+    setEffectTypeaheadIndex(0)
+    const newInput = `/effect ${effect.name}`
+    if (submit) {
+      // Clear input and trigger command immediately
+      setInput('')
+      setTimeout(() => sendMessage(newInput), 0)
+    } else {
+      setInput(newInput)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Effect subcommand typeahead takes highest priority
+    if (showEffectTypeahead && filteredEffects.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setEffectTypeaheadIndex(prev => Math.min(prev + 1, filteredEffects.length - 1))
+        return
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setEffectTypeaheadIndex(prev => Math.max(prev - 1, 0))
+        return
+      } else if (e.key === 'Tab') {
+        e.preventDefault()
+        selectEffect(filteredEffects[effectTypeaheadIndex])
+        return
+      } else if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        selectEffect(filteredEffects[effectTypeaheadIndex], true)
+        return
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setInput('/effect ')
+        return
+      }
+    }
+
     // Typeahead navigation takes priority when visible
     if (showTypeahead && filteredCommands.length > 0) {
       if (e.key === 'ArrowDown') {
@@ -1145,30 +1209,61 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
           ))}
         </div>
       )}
+
+      {/* Effect Subcommand Typeahead */}
+      {showEffectTypeahead && filteredEffects.length > 0 && (
+        <div className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+          {filteredEffects.map((effect, idx) => (
+            <div
+              key={effect.name}
+              onClick={() => selectEffect(effect, true)}
+              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+                idx === effectTypeaheadIndex
+                  ? 'bg-[var(--console-accent)]/10'
+                  : 'hover:bg-[var(--console-accent)]/5'
+              }`}
+            >
+              <span className="text-[var(--console-muted)] opacity-60 w-8 text-center tracking-tighter">{effect.hint}</span>
+              <span className="text-[var(--console-accent)] shrink-0">{effect.name}</span>
+              <span className="text-[var(--console-muted)] truncate">{effect.description}</span>
+              <span className="text-[var(--console-muted)] opacity-40 ml-auto text-[10px]">tab ↹</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 
-  // Mobile: Bottom drawer
+  // Mobile: Full-width bottom drawer with safe area support
   if (isMobile) {
     return (
       <>
         {/* Backdrop */}
         <div
-          className={`fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 ${
+          className={`fixed inset-0 z-50 bg-black/60 transition-opacity duration-300 ${
             isClosing ? 'opacity-0' : 'opacity-100'
           }`}
           onClick={handleClose}
         />
 
-        {/* Drawer */}
+        {/* Drawer - full width, respects safe areas */}
         <div
-          className={`fixed inset-x-0 bottom-0 z-50 font-mono text-sm transition-transform duration-300 ease-out px-3 pb-3 ${
+          className={`fixed inset-x-0 bottom-0 z-50 font-mono text-sm transition-transform duration-300 ease-out ${
             isClosing ? 'translate-y-full' : 'translate-y-0'
           }`}
-          style={{ height: '50vh', maxHeight: '420px' }}
+          style={{
+            height: 'calc(70vh - env(safe-area-inset-top, 0px))',
+            maxHeight: '500px',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          }}
         >
-          <div className="h-full flex flex-col bg-[var(--console-outer-bg)] border border-[var(--color-text)] rounded-lg p-1">
-            {/* Chrome Title Bar - same as desktop */}
+          <div className="h-full flex flex-col bg-[var(--console-outer-bg)] border-t border-x border-[var(--color-text)] p-1">
+            {/* Drag handle indicator */}
+            <div className="flex justify-center py-1">
+              <div className="w-10 h-1 bg-[var(--color-muted)] rounded-full opacity-50" />
+            </div>
+
+            {/* Chrome Title Bar */}
             <div className="flex-shrink-0 flex items-center gap-3 px-1 py-1">
               {/* Console Icon */}
               <div className="p-0.5 text-[var(--color-text)]">
@@ -1190,10 +1285,10 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
               {/* Horizontal line */}
               <div className="flex-1 h-px bg-[var(--color-muted)]" />
 
-              {/* Close Icon */}
+              {/* Close Icon - larger touch target for mobile */}
               <button
                 onClick={handleClose}
-                className="p-0.5 hover:opacity-60 transition-opacity text-[var(--color-text)]"
+                className="p-2 -m-1 hover:opacity-60 transition-opacity text-[var(--color-text)]"
               >
                 <svg width="14" height="14" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" strokeWidth="1.5"/>

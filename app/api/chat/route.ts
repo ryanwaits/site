@@ -180,7 +180,7 @@ export async function POST(request: Request) {
             settingSources: ['project'],
             allowedTools: ['Read', 'Skill'],
             disallowedTools: ['Bash', 'Edit', 'Write', 'Glob', 'Grep', 'Task', 'WebSearch', 'WebFetch'],
-            pathToClaudeCodeExecutable: process.env.CLAUDE_CODE_PATH || '/Users/ryanwaits/.bun/bin/claude',
+            pathToClaudeCodeExecutable: process.env.CLAUDE_CODE_PATH,
           },
         })
 
