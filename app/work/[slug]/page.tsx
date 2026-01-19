@@ -33,7 +33,7 @@ const PROJECTS: Record<string, {
         title: 'The Problem',
         content: `Code coverage has tooling. Documentation coverage? Nothing.
 
-You ship a library with 50 exports. How many are documented? Which ones are missing @param tags? Nobody knows until a user files an issue.`,
+You ship a library with 50 exports. How many are documented? Which ones are missing @param tags? Nobody knows until a user files an issue. I got tired of guessing.`,
         terminal: {
           output: [
             '// your-package/index.ts',
@@ -128,7 +128,7 @@ Same workflow as code coverage. Documentation becomes a first-class quality metr
         title: 'Get Started',
         content: `Zero config. Point at your source directory. Get a report.
 
-Works with any TypeScript project. Extracts JSDoc, TSDoc, and inline comments.`,
+Started as 2000 lines of TypeScript. Now it's 100 lines of prompts. Deleted 95% of the code. The tool got better.`,
         terminal: {
           command: 'npm install -g doccov',
           output: [
@@ -150,7 +150,7 @@ Works with any TypeScript project. Extracts JSDoc, TSDoc, and inline comments.`,
   },
   openpkg: {
     name: 'openpkg',
-    tagline: 'TypeScript API extraction',
+    tagline: 'OpenAPI for TypeScript packages',
     status: 'Stable',
     sections: [
       {
@@ -158,7 +158,7 @@ Works with any TypeScript project. Extracts JSDoc, TSDoc, and inline comments.`,
         title: 'The Problem',
         content: `REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.
 
-You want to know what a package exports? Read the source. Grep through node_modules. Hope the docs are current.`,
+You want to know what a package exports? Read the source. Grep through node_modules. Hope the docs are current. This seemed like an obvious gap, so I built it.`,
         terminal: {
           output: [
             '// How do you know what lodash exports?',
@@ -179,7 +179,7 @@ You want to know what a package exports? Read the source. Grep through node_modu
         title: 'The Solution',
         content: `openpkg extracts the complete public API surface from any TypeScript package.
 
-Functions, types, interfaces, classes. Parameters, return types, generics. Everything machine-readable.`,
+Functions, types, interfaces, classes. Parameters, return types, generics. JSON Schema out — ready for agents, tooling, whatever needs to understand your API.`,
         terminal: {
           command: 'npx openpkg extract lodash',
           typing: true,
@@ -228,7 +228,7 @@ Feed it to an LLM. Generate documentation. Build type-safe wrappers.`,
         title: 'Use Cases',
         content: `Build AI-powered dev tools. Generate SDK wrappers. Create documentation sites.
 
-Any workflow that needs to understand what a package does—without reading source code.`,
+The whole point: agents need to understand your API surface in one pass. Not skim docs. Not grep source. Just structured JSON they can reason about.`,
         terminal: {
           output: [
             '// Feed to Claude for code generation',
@@ -249,7 +249,7 @@ Any workflow that needs to understand what a package does—without reading sour
       {
         id: 'install',
         title: 'Get Started',
-        content: `Point at any package. Local path or npm registry. Zero config extraction.`,
+        content: `Point at any package. Local path or npm registry. One command, JSON Schema out. No config, no setup, just the API surface.`,
         terminal: {
           command: 'npm install -g openpkg',
           output: [
@@ -269,133 +269,6 @@ Any workflow that needs to understand what a package does—without reading sour
       }
     ]
   },
-  'chainhooks-mcp': {
-    name: 'chainhooks-mcp',
-    tagline: 'MCP server for Bitcoin events',
-    status: 'Active',
-    sections: [
-      {
-        id: 'problem',
-        title: 'The Problem',
-        content: `AI agents can't see blockchain events. They're blind to what's happening on Bitcoin and Stacks.
-
-You want Claude to react to a transaction? Build a custom integration. Every time.`,
-        terminal: {
-          output: [
-            '// Current state of AI + blockchain',
-            '',
-            'User: "Monitor my STX wallet and alert me"',
-            '',
-            'Claude: "I cannot access blockchain data.',
-            '         I have no way to monitor wallets.',
-            '         Please use a block explorer."',
-            '',
-            '// The agent is blind.',
-          ]
-        }
-      },
-      {
-        id: 'solution',
-        title: 'The Solution',
-        content: `chainhooks-mcp connects AI agents to Bitcoin event streams via the Model Context Protocol.
-
-Real-time transaction data. Smart contract events. Wallet activity. All accessible to any MCP-compatible agent.`,
-        terminal: {
-          command: 'chainhooks-mcp start',
-          typing: true,
-          output: [
-            '$ chainhooks-mcp start',
-            '',
-            '◐ Connecting to Chainhooks service...',
-            '◐ Registering MCP server...',
-            '◐ Exposing blockchain tools...',
-          ]
-        }
-      },
-      {
-        id: 'streaming',
-        title: 'Live Streaming',
-        content: `Events flow in real-time. STX transfers. Contract calls. NFT mints.
-
-The agent sees it as it happens. Reacts, analyzes, alerts.`,
-        terminal: {
-          output: [
-            '┌─ CHAINHOOKS STREAM ──────────────────────┐',
-            '│ ● CONNECTED stacks-mainnet              │',
-            '├──────────────────────────────────────────┤',
-            '│ 18:04:22 STX_TRANSFER                   │',
-            '│          0.5 STX → SP2J6...3KV          │',
-            '│                                          │',
-            '│ 18:04:19 CONTRACT_CALL                  │',
-            '│          alex-v2.swap-helper            │',
-            '│          fn: swap-stx-for-token         │',
-            '│                                          │',
-            '│ 18:04:15 NFT_MINT                       │',
-            '│          megapont-ape-club #4521        │',
-            '│                                          │',
-            '│          ↓ streaming...                 │',
-            '└──────────────────────────────────────────┘',
-          ]
-        }
-      },
-      {
-        id: 'tools',
-        title: 'Agent Tools',
-        content: `Exposes tools the agent can call. Query balances. Decode transactions. Set up event filters.
-
-Standard MCP interface. Works with Claude Desktop, Cursor, any MCP client.`,
-        terminal: {
-          output: [
-            '// Tools exposed to the agent',
-            '',
-            'tools: [',
-            '  {',
-            '    name: "get_stx_balance",',
-            '    params: { address: "string" }',
-            '  },',
-            '  {',
-            '    name: "subscribe_to_address",',
-            '    params: { address: "string", events: "string[]" }',
-            '  },',
-            '  {',
-            '    name: "decode_transaction",',
-            '    params: { txid: "string" }',
-            '  },',
-            '  {',
-            '    name: "query_contract_state",',
-            '    params: { contract: "string", key: "string" }',
-            '  }',
-            ']',
-          ]
-        }
-      },
-      {
-        id: 'install',
-        title: 'Get Started',
-        content: `Add to your MCP config. The agent gains blockchain vision.`,
-        terminal: {
-          output: [
-            '// claude_desktop_config.json',
-            '',
-            '{',
-            '  "mcpServers": {',
-            '    "chainhooks": {',
-            '      "command": "npx",',
-            '      "args": ["chainhooks-mcp"],',
-            '      "env": {',
-            '        "CHAINHOOKS_API_KEY": "..."',
-            '      }',
-            '    }',
-            '  }',
-            '}',
-            '',
-            '// Restart Claude Desktop',
-            '// Agent now has blockchain tools',
-          ]
-        }
-      }
-    ]
-  }
 }
 
 // Terminal component with typing animation

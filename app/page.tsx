@@ -7,63 +7,49 @@ import { SiteFooter } from './components/site-footer'
 
 const MARKDOWN_CONTENT = `---
 title: Ryan Waits
-description: Product engineer building AI-native developer tools
+description: Designer and engineer exploring what dev tools look like when agents are users
 location: Austin, TX
 ---
 
 # Ryan Waits
 
-Product engineer. Building tools that make codebases machine-readable.
+I design developer tools. Mostly CLIs, docs systems, and the invisible stuff that makes codebases easier to work with.
 
-Previously at [Hiro](https://hiro.so) building Bitcoin developer infrastructure (2020-2024).
-Now focused on the intersection of documentation and machine readability.
+Spent three years at [Hiro](https://hiro.so) shaping Bitcoin developer infrastructure — rearchitected their docs system across 12+ packages and 10+ APIs, designed and built the [Chainhooks CLI](https://github.com/hirosystems/chainhooks), and prototyped onboarding flows for their event-streaming platform. All with a team of one, which meant designing for constraints: atomic primitives, automation-first, surfaces that could scale without me.
+
+I was designing for agents before it was obvious. Now it's obvious.
 
 ---
 
 ## Now
 
-Building primitives for AI-native development. The agent doesn't need your
-features — it needs your surfaces.
+Thinking about what software design means when agents are the user. Should we be building fewer features and more primitives? What does a good API surface look like when the consumer isn't a human skimming docs?
 
-**[openpkg](https://github.com/ryanwaits/openpkg)** — TypeScript API extraction.
-One command, structured JSON Schema output. OpenAPI for packages.
+Still figuring it out. Building things to learn:
 
-**[doccov](https://github.com/ryanwaits/doccov)** — Documentation coverage.
-Codecov for docs. Started as 2000 lines of TypeScript, now 100 lines of prompts.
+**[openpkg](https://github.com/ryanwaits/openpkg)** — Extracts the public API from any TypeScript package. JSON Schema out. One command. I wanted OpenAPI for packages — turns out it didn't exist, so I built it.
 
-**[chainhooks-mcp](https://github.com/ryanwaits/chainhooks-mcp)** — MCP server
-for Bitcoin event streams. Connect agents to on-chain data.
+**[doccov](https://github.com/ryanwaits/doccov)** — Documentation coverage. Started as 2000 lines of TypeScript, now 100 lines of prompts. Deleted 95% of the code. The tool got better. [Wrote about it](/n/2000-to-100).
 
 ---
 
-## Writing
+## Thinking
 
-**[From 2000 Lines to 100](/n/2000-to-100)** — Deleted 95% of doccov. Replaced
-code with prompts. The tool got better.
+I write when I figure something out:
 
-**[Features Don't Compose](/n/features-dont-compose)** — The agent doesn't need
-features. It needs primitives. Build surfaces, not workflows.
-
-**[New Standard, Who Dis?](/n/new-standard-who-dis)** — Standard JSON Schema
-shipped. Runtime extraction just got universal.
-
-**[How Does This Not Exist?](/n/how-does-this-not-exist)** — REST has OpenAPI.
-GraphQL has introspection. TypeScript packages have... nothing. Until now.
+- **[From 2000 Lines to 100](/n/2000-to-100)** — What happens when you replace code with prompts.
+- **[Features Don't Compose](/n/features-dont-compose)** — Why agents need primitives, not features.
+- **[How Does This Not Exist?](/n/how-does-this-not-exist)** — The missing standard for TypeScript packages.
 
 ---
 
-## Principles
+## How I work
 
-1. **Simplicity over flexibility** — Every option is a decision. Most don't
-   need to be made.
+I prototype in code. Mockups are fine but I'd rather build the thing and feel it. Most of my design decisions come from using what I made and noticing what's off.
 
-2. **Standards over custom** — Proprietary formats are debt. Standards are
-   leverage.
+I obsess over small details — error messages, progress feedback, what information shows when. Developer tools should feel fast and unsurprising.
 
-3. **Surfaces over features** — The best API doesn't need documentation.
-   Make the right thing obvious.
-
-4. **Delete over add** — The feature you remove can't break.
+I delete more than I add. If I can remove a feature and the tool gets simpler without getting worse, I remove it.
 
 ---
 

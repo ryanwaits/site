@@ -6,28 +6,20 @@ import { SiteFooter } from '../components/site-footer'
 
 const PROJECTS = [
   {
-    slug: 'doccov',
-    name: 'doccov',
-    tagline: 'Codecov for documentation',
-    description: 'Documentation coverage analysis. Measures how well your public APIs are documented.',
-    status: 'MVP',
-    github: 'https://github.com/ryanwaits/doccov'
-  },
-  {
     slug: 'openpkg',
     name: 'openpkg',
-    tagline: 'TypeScript API extraction',
-    description: 'Extracts public API surface from any TypeScript package. Zero config.',
+    tagline: 'OpenAPI for TypeScript packages',
+    description: 'Extracts the public API from any TypeScript package. JSON Schema out. Wanted this to exist, so built it.',
     status: 'Stable',
     github: 'https://github.com/ryanwaits/openpkg'
   },
   {
-    slug: 'chainhooks-mcp',
-    name: 'chainhooks-mcp',
-    tagline: 'MCP server for Bitcoin events',
-    description: 'Connect AI agents to Bitcoin event streams via Model Context Protocol.',
-    status: 'Active',
-    github: 'https://github.com/ryanwaits/chainhooks-mcp'
+    slug: 'doccov',
+    name: 'doccov',
+    tagline: 'Codecov for documentation',
+    description: 'Documentation coverage. Started as 2000 lines of TypeScript, now 100 lines of prompts. Deleted 95% of the code. Tool got better.',
+    status: 'MVP',
+    github: 'https://github.com/ryanwaits/doccov'
   },
 ]
 

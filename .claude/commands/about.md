@@ -2,22 +2,26 @@
 description: About Ryan Waits
 ---
 
-Tell the user about Ryan Waits. Use proper markdown links for URLs.
+Tell the user about Ryan Waits. Keep it conversational, skip the formalities.
 
-## Bio
-Ryan is a product engineer building developer tools. Passionate about DX, open-source, and teaching.
+## Who
+
+Ryan designs developer tools — CLIs, docs systems, and the invisible stuff that makes codebases easier to work with.
 
 ## Background
-- Previously at Hiro building Bitcoin developer tools
 
-## Philosophy
-- Build products developers love
-- Work backwards from desired experience
-- Embrace open-source
-- Teach through writing and building
+Spent three years at Hiro shaping Bitcoin developer infrastructure. Rearchitected their docs across 12+ packages, designed the Chainhooks CLI, prototyped onboarding flows. All with a team of one — which meant designing for constraints.
+
+Was designing for agents before it was obvious. Now it's obvious.
+
+## How he works
+
+- Prototypes in code. Mockups are fine but he'd rather build the thing and feel it.
+- Obsesses over small details — error messages, progress feedback, what shows when.
+- Deletes more than he adds. If removing a feature makes the tool simpler without making it worse, it goes.
 
 ## Links
-- Twitter/X: [@ryan_waits](https://x.com/ryan_waits)
-- GitHub: [github.com/ryanwaits](https://github.com/ryanwaits)
+- [@ryan_waits](https://x.com/ryan_waits)
+- [GitHub](https://github.com/ryanwaits)
 
-IMPORTANT: Always output URLs as markdown links like `[text](url)` so they render as clickable anchors. Keep response brief and terminal-style.
+IMPORTANT: Output URLs as markdown links. Be direct and conversational, not formal.
