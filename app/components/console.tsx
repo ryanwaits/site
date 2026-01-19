@@ -296,9 +296,19 @@ const COMMAND_REGISTRY: Array<{
 }> = [
   { name: 'help', description: 'Show available commands', type: 'client' },
   { name: 'clear', description: 'Clear console history', type: 'client' },
-  { name: 'toggle-theme', description: 'Toggle dark/light mode', type: 'client' },
+  { name: 'theme', description: 'Change color theme', type: 'client', args: '<name>' },
   { name: 'effect', description: 'Visual effects', type: 'client', args: '<name>' },
   { name: 'view', description: 'Generate a custom view', type: 'client', args: '<prompt>' },
+]
+
+// Theme subcommands with visual hints
+const THEME_REGISTRY: Array<{
+  name: string
+  description: string
+  hint: string
+}> = [
+  { name: 'light', description: 'Light mode', hint: '○' },
+  { name: 'dark', description: 'Dark mode', hint: '●' },
 ]
 
 // Effect subcommands with visual hints
@@ -309,8 +319,6 @@ const EFFECT_REGISTRY: Array<{
 }> = [
   { name: 'matrix', description: 'Digital rain', hint: '░▒▓' },
   { name: 'interstellar', description: 'Gravitational waves', hint: '◠◡◠' },
-  { name: 'pluribus', description: 'E pluribus unum', hint: '✦✧✦' },
-  { name: 'true detective', description: 'Time is a flat circle', hint: '◯─◯' },
 ]
 
 // Client-side commands - bypass API for instant response
@@ -321,7 +329,8 @@ const CLIENT_COMMANDS: Record<string, (args: string, helpers: {
 }) => string | null> = {
   help: () => {
     const effectList = EFFECT_REGISTRY.map(e => `\`${e.name}\``).join(', ')
-    return `## Commands\n\n${COMMAND_REGISTRY.map(c => `- \`/${c.name}${c.args ? ' ' + c.args : ''}\` - ${c.description}`).join('\n')}\n\n**Effects:** ${effectList}\n\nOr just ask anything.`
+    const themeList = THEME_REGISTRY.map(t => `\`${t.name}\``).join(', ')
+    return `## Commands\n\n${COMMAND_REGISTRY.map(c => `- \`/${c.name}${c.args ? ' ' + c.args : ''}\` - ${c.description}`).join('\n')}\n\n**Themes:** ${themeList}\n\n**Effects:** ${effectList}\n\nOr just ask anything.`
   },
 
   clear: (_, { setMessages }) => {
@@ -329,11 +338,15 @@ const CLIENT_COMMANDS: Record<string, (args: string, helpers: {
     return null
   },
 
-  'toggle-theme': (_, { onCommand }) => {
-    const isDark = document.documentElement.classList.contains('dark')
-    const newTheme = isDark ? 'light' : 'dark'
-    onCommand?.('theme', newTheme)
-    return `Switched to ${newTheme} mode.`
+  theme: (args, { onCommand }) => {
+    const themeName = args.trim().toLowerCase()
+    const theme = THEME_REGISTRY.find(t => t.name.toLowerCase() === themeName)
+    if (!theme) {
+      const available = THEME_REGISTRY.map(t => `\`${t.name}\``).join(', ')
+      return `Unknown theme. Available: ${available}`
+    }
+    onCommand?.('theme', theme.name)
+    return `Switched to ${theme.name} mode.`
   },
 
   effect: (args, { onCommand }) => {
@@ -350,8 +363,6 @@ const CLIENT_COMMANDS: Record<string, (args: string, helpers: {
     const flavorText: Record<string, string> = {
       'matrix': 'Wake up, Neo...',
       'interstellar': 'Do not go gentle into that good night.',
-      'pluribus': 'Out of many, one.',
-      'true detective': 'Time is a flat circle.',
     }
     return flavorText[effect.name] || `${effect.name} activated.`
   },
@@ -370,6 +381,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   const [typeaheadIndex, setTypeaheadIndex] = useState(0)
   const [mentionTypeaheadIndex, setMentionTypeaheadIndex] = useState(0)
   const [effectTypeaheadIndex, setEffectTypeaheadIndex] = useState(0)
+  const [themeTypeaheadIndex, setThemeTypeaheadIndex] = useState(0)
   const [posts, setPosts] = useState<Post[]>([])
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('idle')
 
@@ -461,6 +473,14 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     ? EFFECT_REGISTRY.filter(e => e.name.toLowerCase().startsWith(effectQuery))
     : []
 
+  // Compute /theme subcommand typeahead
+  const themeMatch = input.match(/^\/theme\s+(.*)$/i)
+  const showThemeTypeahead = themeMatch !== null
+  const themeQuery = themeMatch ? themeMatch[1].toLowerCase() : ''
+  const filteredThemes = showThemeTypeahead
+    ? THEME_REGISTRY.filter(t => t.name.toLowerCase().startsWith(themeQuery))
+    : []
+
   // Reset typeahead index when filtered results change
   useEffect(() => {
     setTypeaheadIndex(0)
@@ -474,6 +494,10 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     setEffectTypeaheadIndex(0)
   }, [effectQuery])
 
+  useEffect(() => {
+    setThemeTypeaheadIndex(0)
+  }, [themeQuery])
+
   // Scroll selected typeahead option into view
   useEffect(() => {
     if (showTypeahead && typeaheadRef.current) {
@@ -481,6 +505,27 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
       selected?.scrollIntoView({ block: 'nearest' })
     }
   }, [typeaheadIndex, showTypeahead])
+
+  useEffect(() => {
+    if (showMentionTypeahead && mentionTypeaheadRef.current) {
+      const selected = mentionTypeaheadRef.current.querySelector(`[data-index="${mentionTypeaheadIndex}"]`)
+      selected?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [mentionTypeaheadIndex, showMentionTypeahead])
+
+  useEffect(() => {
+    if (showEffectTypeahead && effectTypeaheadRef.current) {
+      const selected = effectTypeaheadRef.current.querySelector(`[data-index="${effectTypeaheadIndex}"]`)
+      selected?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [effectTypeaheadIndex, showEffectTypeahead])
+
+  useEffect(() => {
+    if (showThemeTypeahead && themeTypeaheadRef.current) {
+      const selected = themeTypeaheadRef.current.querySelector(`[data-index="${themeTypeaheadIndex}"]`)
+      selected?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [themeTypeaheadIndex, showThemeTypeahead])
 
   // Window state
   const [windowState, setWindowState] = useState<WindowState>(DEFAULT_STATE)
@@ -490,6 +535,9 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typeaheadRef = useRef<HTMLDivElement>(null)
+  const mentionTypeaheadRef = useRef<HTMLDivElement>(null)
+  const effectTypeaheadRef = useRef<HTMLDivElement>(null)
+  const themeTypeaheadRef = useRef<HTMLDivElement>(null)
   const dragOffset = useRef({ x: 0, y: 0 })
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 })
 
@@ -965,8 +1013,44 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     }
   }
 
+  const selectTheme = (theme: typeof THEME_REGISTRY[0], submit = false) => {
+    setThemeTypeaheadIndex(0)
+    const newInput = `/theme ${theme.name}`
+    if (submit) {
+      setInput('')
+      setTimeout(() => sendMessage(newInput), 0)
+    } else {
+      setInput(newInput)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Effect subcommand typeahead takes highest priority
+    // Theme subcommand typeahead takes highest priority
+    if (showThemeTypeahead && filteredThemes.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setThemeTypeaheadIndex(prev => Math.min(prev + 1, filteredThemes.length - 1))
+        return
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setThemeTypeaheadIndex(prev => Math.max(prev - 1, 0))
+        return
+      } else if (e.key === 'Tab') {
+        e.preventDefault()
+        selectTheme(filteredThemes[themeTypeaheadIndex])
+        return
+      } else if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        selectTheme(filteredThemes[themeTypeaheadIndex], true)
+        return
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setInput('/theme ')
+        return
+      }
+    }
+
+    // Effect subcommand typeahead
     if (showEffectTypeahead && filteredEffects.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
@@ -1189,10 +1273,11 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
       {/* @Mention Typeahead */}
       {showMentionTypeahead && filteredPosts.length > 0 && (
-        <div className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+        <div ref={mentionTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
           {filteredPosts.map((post, idx) => (
             <div
               key={post.slug}
+              data-index={idx}
               onClick={() => selectMention(post)}
               className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
                 idx === mentionTypeaheadIndex
@@ -1212,10 +1297,11 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
       {/* Effect Subcommand Typeahead */}
       {showEffectTypeahead && filteredEffects.length > 0 && (
-        <div className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+        <div ref={effectTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
           {filteredEffects.map((effect, idx) => (
             <div
               key={effect.name}
+              data-index={idx}
               onClick={() => selectEffect(effect, true)}
               className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
                 idx === effectTypeaheadIndex
@@ -1226,6 +1312,29 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
               <span className="text-[var(--console-muted)] opacity-60 w-8 text-center tracking-tighter">{effect.hint}</span>
               <span className="text-[var(--console-accent)] shrink-0">{effect.name}</span>
               <span className="text-[var(--console-muted)] truncate">{effect.description}</span>
+              <span className="text-[var(--console-muted)] opacity-40 ml-auto text-[10px]">tab ↹</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Theme Subcommand Typeahead */}
+      {showThemeTypeahead && filteredThemes.length > 0 && (
+        <div ref={themeTypeaheadRef} className="border-t border-[var(--color-border)] bg-[var(--console-content-bg)] max-h-[108px] overflow-y-auto">
+          {filteredThemes.map((theme, idx) => (
+            <div
+              key={theme.name}
+              data-index={idx}
+              onClick={() => selectTheme(theme, true)}
+              className={`px-3 py-2 cursor-pointer flex items-center gap-3 text-xs font-mono ${
+                idx === themeTypeaheadIndex
+                  ? 'bg-[var(--console-accent)]/10'
+                  : 'hover:bg-[var(--console-accent)]/5'
+              }`}
+            >
+              <span className="text-[var(--console-muted)] opacity-60 w-8 text-center tracking-tighter">{theme.hint}</span>
+              <span className="text-[var(--console-accent)] shrink-0">{theme.name}</span>
+              <span className="text-[var(--console-muted)] truncate">{theme.description}</span>
               <span className="text-[var(--console-muted)] opacity-40 ml-auto text-[10px]">tab ↹</span>
             </div>
           ))}
@@ -1248,6 +1357,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
 
         {/* Drawer - full width, respects safe areas */}
         <div
+          data-console
           className={`fixed inset-x-0 bottom-0 z-50 font-mono text-sm transition-transform duration-300 ease-out ${
             isClosing ? 'translate-y-full' : 'translate-y-0'
           }`}
@@ -1309,6 +1419,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
   // Desktop: Draggable window
   return (
     <div
+      data-console
       className={`fixed z-50 font-mono text-sm ${
         isClosing ? 'opacity-0 scale-95 transition-[opacity,transform] duration-200' : 'opacity-100 scale-100'
       }`}

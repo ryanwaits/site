@@ -1,6 +1,6 @@
 import React, { ComponentPropsWithoutRef } from 'react';
 import { Link } from 'next-view-transitions';
-import { highlight } from 'sugar-high';
+import { MdxPre, MdxCode } from '@/app/components/mdx-code';
 
 type HeadingProps = ComponentPropsWithoutRef<'h1'>;
 type ParagraphProps = ComponentPropsWithoutRef<'p'>;
@@ -81,24 +81,8 @@ const components = {
       </a>
     );
   },
-  code: ({ children, ...props }: ComponentPropsWithoutRef<'code'>) => {
-    const codeHTML = highlight(children as string);
-    return (
-      <code
-        className="bg-[var(--color-border)] px-1.5 py-0.5 rounded text-sm font-mono"
-        dangerouslySetInnerHTML={{ __html: codeHTML }}
-        {...props}
-      />
-    );
-  },
-  pre: ({ children, ...props }: ComponentPropsWithoutRef<'pre'>) => (
-    <pre
-      className="bg-[var(--color-border)] p-4 rounded-lg overflow-x-auto mb-6 text-sm"
-      {...props}
-    >
-      {children}
-    </pre>
-  ),
+  pre: MdxPre,
+  code: MdxCode,
   Table: ({ data }: { data: { headers: string[]; rows: string[][] } }) => (
     <table className="w-full mb-6 text-sm">
       <thead>

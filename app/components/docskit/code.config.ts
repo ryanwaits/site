@@ -1,0 +1,59 @@
+import type { CodeHikeConfig } from 'codehike/mdx';
+
+export type CodeOptions = {
+  copyButton?: boolean;
+  lineNumbers?: boolean;
+  wordWrap?: boolean;
+  animate?: boolean;
+};
+
+export type CodeInfo = {
+  storage?: string;
+  options: CodeOptions;
+  tabs: {
+    options: CodeOptions;
+    title: string;
+    code: string;
+    pre: React.ReactNode;
+    icon: React.ReactNode;
+    lang: string;
+  }[];
+};
+
+// Import custom theme that uses CSS variables for light/dark mode support
+import customTheme from './theme.mjs';
+export const theme = customTheme;
+
+export const chConfig: CodeHikeConfig = {
+  components: {
+    code: 'DocsKitCode',
+    inlineCode: 'DocsKitInlineCode',
+  },
+};
+
+/**
+ * Convert flags string to options object.
+ *
+ * @example
+ * flagsToOptions("na") // { lineNumbers: true, animate: true }
+ * flagsToOptions("c") // { copyButton: true }
+ */
+export function flagsToOptions(flags: string = ''): CodeOptions {
+  const options: CodeOptions = {};
+  const map = {
+    c: 'copyButton',
+    n: 'lineNumbers',
+    w: 'wordWrap',
+    a: 'animate',
+  } as const;
+  flags.split('').forEach((flag) => {
+    if (!flag) return;
+    if (flag in map) {
+      const key = map[flag as keyof typeof map];
+      options[key] = true;
+    } else {
+      console.warn(`Unknown flag: ${flag}`);
+    }
+  });
+  return options;
+}

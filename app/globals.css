@@ -8,6 +8,24 @@
 }
 
 :root {
+  /* CodeHike - Always dark code blocks */
+  --ch-0: #e6edf3;
+  --ch-1: #ff7b72;
+  --ch-2: #a5d6ff;
+  --ch-3: #79c0ff;
+  --ch-4: #a5d6ff;
+  --ch-5: #d2a8ff;
+  --ch-6: #ffa657;
+  --ch-7: #8b949e;
+  --ch-8: #79c0ff;
+  --ch-9: #e6edf3;
+  --ch-15: #8b949e;
+  --ch-16: #0d1117;
+  --ch-20: #264f78;
+  --ch-22: #010409;
+  --ch-23: #30363d;
+  --ch-24: #6e7681;
+
   /* Amp palette - Light mode */
   --color-bg: #DFDFC1;
   --color-text: #0B0D0B;
@@ -35,16 +53,40 @@
   --contrib-3: #3A3A30;
   --contrib-4: #0B0D0B;
 
-  /* Syntax highlighting - Tokyo Night style (used by sugar-high) */
-  --sh-class: #7aa2f7;
-  --sh-identifier: #c0caf5;
-  --sh-sign: #89ddff;
-  --sh-string: #9ece6a;
-  --sh-keyword: #bb9af7;
-  --sh-comment: #565f89;
-  --sh-jsxliterals: #7aa2f7;
-  --sh-property: #73daca;
-  --sh-entity: #e0af68;
+  /* CodeHike theme variables - Light mode (same as dark for now) */
+  --ch-keyword: #F6833B;
+  --ch-string: #9ECE6A;
+  --ch-function: #E8E4D9;
+  --ch-variable: #E8E4D9;
+  --ch-property: #73DACA;
+  --ch-number: #F6833B;
+  --ch-comment: #8A8680;
+  --ch-punctuation: #8A8680;
+  --ch-type: #73DACA;
+  --ch-tag: #F6833B;
+  --ch-attr: #9ECE6A;
+  --ch-text: #E8E4D9;
+  --ch-bg: #121714;
+  --ch-selection: rgba(246, 131, 59, 0.3);
+  --ch-line-number: #8A8680;
+  --ch-tabs-bg: #0B0D0B;
+  --ch-border: #2A2F2C;
+  --ch-muted: #8A8680;
+
+  /* Code block background - light mode */
+  --code-bg: #121714;
+  --code-text: #E8E4D9;
+
+  /* Sugar-high syntax highlighting (for client-side) - matches console theme */
+  --sh-class: #73DACA;
+  --sh-identifier: #E8E4D9;
+  --sh-sign: #8A8680;
+  --sh-string: #9ECE6A;
+  --sh-keyword: #F6833B;
+  --sh-comment: #8A8680;
+  --sh-jsxliterals: #73DACA;
+  --sh-property: #73DACA;
+  --sh-entity: #F6833B;
 
   /* Markdown syntax highlighting - Amp-inspired light */
   --md-structure: #9A9B94;        /* hash, hr, pipes, brackets */
@@ -87,6 +129,30 @@
     --contrib-3: #8A8D87;
     --contrib-4: #E8E4D9;
 
+    /* CodeHike theme variables - Dark mode (console-inspired) */
+    --ch-keyword: #F6833B;          /* orange - keywords, control flow */
+    --ch-string: #9ECE6A;           /* green - strings, template literals */
+    --ch-function: #E8E4D9;         /* cream - function names */
+    --ch-variable: #E8E4D9;         /* cream - variables, identifiers */
+    --ch-property: #73DACA;         /* teal - object properties */
+    --ch-number: #F6833B;           /* orange - numbers, constants */
+    --ch-comment: #8A8680;          /* muted - comments */
+    --ch-punctuation: #8A8680;      /* muted - brackets, operators */
+    --ch-type: #73DACA;             /* teal - types, classes */
+    --ch-tag: #F6833B;              /* orange - JSX/HTML tags */
+    --ch-attr: #9ECE6A;             /* green - attributes */
+    --ch-text: #E8E4D9;             /* default text */
+    --ch-bg: #121714;               /* code block background */
+    --ch-selection: rgba(246, 131, 59, 0.3);
+    --ch-line-number: #8A8680;
+    --ch-tabs-bg: #0B0D0B;
+    --ch-border: #2A2F2C;
+    --ch-muted: #8A8680;
+
+    /* Code block background - dark mode */
+    --code-bg: #121714;
+    --code-text: #E8E4D9;
+
     /* Markdown syntax highlighting - Amp-inspired dark */
     --md-structure: #5A615B;        /* hash, hr, pipes, brackets */
     --md-emphasis: #E8E4D9;         /* bold text */
@@ -128,6 +194,28 @@
   --contrib-3: #8A8D87;
   --contrib-4: #E8E4D9;
 
+  /* CodeHike theme variables - Dark mode (console-inspired) */
+  --ch-keyword: #F6833B;
+  --ch-string: #9ECE6A;
+  --ch-function: #E8E4D9;
+  --ch-variable: #E8E4D9;
+  --ch-property: #73DACA;
+  --ch-number: #F6833B;
+  --ch-comment: #8A8680;
+  --ch-punctuation: #8A8680;
+  --ch-type: #73DACA;
+  --ch-tag: #F6833B;
+  --ch-attr: #9ECE6A;
+  --ch-text: #E8E4D9;
+  --ch-bg: #121714;
+  --ch-selection: rgba(246, 131, 59, 0.3);
+  --ch-line-number: #8A8680;
+  --ch-tabs-bg: #0B0D0B;
+  --ch-border: #2A2F2C;
+  --ch-muted: #8A8680;
+  --code-bg: #121714;
+  --code-text: #E8E4D9;
+
   /* Markdown syntax highlighting - Amp-inspired dark */
   --md-structure: #5A615B;
   --md-emphasis: #E8E4D9;
@@ -160,6 +248,28 @@
   --console-accent: #F6833B;
   --console-text: #E8E4D9;
   --console-muted: #8A8680;
+
+  /* CodeHike theme variables - Light mode (same as dark for now) */
+  --ch-keyword: #F6833B;
+  --ch-string: #9ECE6A;
+  --ch-function: #E8E4D9;
+  --ch-variable: #E8E4D9;
+  --ch-property: #73DACA;
+  --ch-number: #F6833B;
+  --ch-comment: #8A8680;
+  --ch-punctuation: #8A8680;
+  --ch-type: #73DACA;
+  --ch-tag: #F6833B;
+  --ch-attr: #9ECE6A;
+  --ch-text: #E8E4D9;
+  --ch-bg: #121714;
+  --ch-selection: rgba(246, 131, 59, 0.3);
+  --ch-line-number: #8A8680;
+  --ch-tabs-bg: #0B0D0B;
+  --ch-border: #2A2F2C;
+  --ch-muted: #8A8680;
+  --code-bg: #121714;
+  --code-text: #E8E4D9;
 
   /* Markdown syntax highlighting - Amp-inspired light */
   --md-structure: #9A9B94;
@@ -237,7 +347,7 @@ time,
 }
 
 pre {
-  background-color: #16161e;
+  background-color: var(--code-bg);
   border-radius: 0.5rem;
   overflow-x: auto;
   padding: 1rem;
@@ -245,11 +355,6 @@ pre {
   line-height: 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  pre {
-    background-color: #121714;
-  }
-}
 
 pre::-webkit-scrollbar {
   display: none;
@@ -272,7 +377,7 @@ pre {
 
 code {
   font-family: var(--font-family-mono);
-  font-size: 14px;
+  font-size: 13px;
   padding: 0;
   background: none;
   color: var(--color-accent-secondary);
@@ -282,8 +387,8 @@ pre code {
   background-color: transparent;
   padding: 0;
   border: none;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 pre code > span .sh__token--identifier {
@@ -776,4 +881,47 @@ a:hover {
 
 .md-link:hover {
   opacity: 0.7;
+}
+
+/* =============================================================================
+   CodeHike / DocsKit Styles
+   ============================================================================= */
+
+/* Tailwind v4 theme - docskit color utilities */
+@theme {
+  /* Docskit code block colors - mapped to CodeHike GitHub theme vars */
+  --color-dk-background: var(--ch-16);
+  --color-dk-border: var(--ch-23);
+  --color-dk-tabs-background: var(--ch-22);
+  --color-dk-tab-inactive-foreground: var(--ch-15);
+  --color-dk-tab-active-foreground: var(--ch-4);
+  --color-dk-selection: var(--ch-20);
+  --color-dk-line-number: var(--ch-24);
+  --color-dk-active-border: var(--ch-3);
+
+  /* CodeHike syntax colors for Tailwind utilities */
+  --color-ch-0: var(--ch-0);
+  --color-ch-1: var(--ch-1);
+  --color-ch-2: var(--ch-2);
+  --color-ch-3: var(--ch-3);
+  --color-ch-4: var(--ch-4);
+  --color-ch-5: var(--ch-5);
+  --color-ch-6: var(--ch-6);
+  --color-ch-7: var(--ch-7);
+  --color-ch-8: var(--ch-8);
+  --color-ch-9: var(--ch-9);
+
+  /* shadcn-style semantic colors for tooltip/collapsible */
+  --color-foreground: var(--color-text);
+  --color-background: var(--color-bg);
+  --color-muted: var(--color-border);
+  --color-muted-foreground: var(--color-muted);
+}
+
+/* Tailwind utility for docskit selection */
+@layer utilities {
+  .selection\:bg-dk-selection::selection,
+  .selection\:bg-dk-selection *::selection {
+    background-color: var(--ch-20);
+  }
 }

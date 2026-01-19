@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { SiteNav } from '../../components/site-nav'
 import { SiteFooter } from '../../components/site-footer'
-import { TerminalFrame, getLineColor } from '../../components/terminal-frame'
+import { TerminalFrame } from '../../components/terminal-frame'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { highlight } from 'sugar-high'
 
 // Project data with scrollytelling sections
 const PROJECTS: Record<string, {
@@ -205,16 +206,9 @@ Feed it to an LLM. Generate documentation. Build type-safe wrappers.`,
             '  "version": "4.17.21",',
             '  "exports": {',
             '    "functions": [',
-            '      {',
-            '        "name": "map",',
-            '        "signature": "<T, R>(arr: T[], fn: (v: T) => R) => R[]",',
-            '        "params": [',
-            '          { "name": "arr", "type": "T[]" },',
-            '          { "name": "fn", "type": "(v: T) => R" }',
-            '        ],',
-            '        "returns": "R[]"',
-            '      },',
-            '      // ... 311 more functions',
+            '      { "name": "map", "params": ["arr", "fn"], "returns": "R[]" },',
+            '      { "name": "filter", "params": ["arr", "pred"], "returns": "T[]" },',
+            '      // ... 309 more',
             '    ],',
             '    "types": 48,',
             '    "interfaces": 23',
@@ -271,7 +265,7 @@ The whole point: agents need to understand your API surface in one pass. Not ski
   },
 }
 
-// Terminal component with typing animation
+// Terminal component with typing animation and syntax highlighting
 function Terminal({ data, isActive }: {
   data: { command?: string; output: string[]; typing?: boolean }
   isActive: boolean
@@ -303,10 +297,14 @@ function Terminal({ data, isActive }: {
     }
   }, [isActive, data])
 
+  // Highlight all content as a single block for better syntax highlighting
+  const fullCode = displayedLines.join('\n')
+  const highlightedHtml = highlight(fullCode)
+
   return (
     <TerminalFrame title="terminal">
       {/* Terminal content */}
-      <div className="p-4 min-h-[300px] max-h-[400px] overflow-y-auto font-mono text-xs">
+      <div className="p-4 min-h-[300px] max-h-[400px] overflow-y-auto font-mono text-[13px] leading-[1.7]">
         <AnimatePresence mode="wait">
           <motion.div
             key={data.output.join('')}
@@ -315,17 +313,12 @@ function Terminal({ data, isActive }: {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {displayedLines.map((line, i) => (
-              <motion.div
-                key={i}
-                initial={data.typing ? { opacity: 0, x: -10 } : { opacity: 1 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.15 }}
-                className={`leading-relaxed ${getLineColor(line)}`}
-              >
-                {line || '\u00A0'}
-              </motion.div>
-            ))}
+            <pre className="m-0 p-0 bg-transparent">
+              <code
+                className="text-[var(--console-text)]"
+                dangerouslySetInnerHTML={{ __html: highlightedHtml || '\u00A0' }}
+              />
+            </pre>
             {isTyping && (
               <span className="inline-block w-2 h-4 bg-[var(--console-accent)] animate-pulse" />
             )}

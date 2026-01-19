@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useLayoutEffect, useRef, ReactNode } from 'react'
 
 interface SiteEffectsContextType {
   theme: 'light' | 'dark'
@@ -30,7 +30,7 @@ export function SiteEffectsProvider({ children }: { children: ReactNode }) {
   const [cursor, setCursor] = useState('default')
   const [animationsEnabled, setAnimationsEnabled] = useState(true)
   const [showMatrix, setShowMatrix] = useState(false)
-  const [showConfetti, setShowConfetti] = useState(false)
+  const [showInterstellar, setShowInterstellar] = useState(false)
 
   const handleCommand = useCallback((action: string, value: string) => {
     switch (action) {
@@ -47,9 +47,8 @@ export function SiteEffectsProvider({ children }: { children: ReactNode }) {
       case 'matrix':
         setShowMatrix(true)
         break
-      case 'confetti':
-        setShowConfetti(true)
-        setTimeout(() => setShowConfetti(false), 3000)
+      case 'interstellar':
+        setShowInterstellar(true)
         break
       case 'music':
         console.log('Music:', value)
@@ -75,8 +74,8 @@ export function SiteEffectsProvider({ children }: { children: ReactNode }) {
       {/* Matrix Rain Effect */}
       {showMatrix && <MatrixRain theme={theme} onComplete={() => setShowMatrix(false)} />}
 
-      {/* Confetti Effect */}
-      {showConfetti && <Confetti />}
+      {/* Interstellar Effect */}
+      {showInterstellar && <InterstellarEffect onComplete={() => setShowInterstellar(false)} />}
     </SiteEffectsContext.Provider>
   )
 }
@@ -242,60 +241,68 @@ function MatrixRain({ theme, onComplete }: { theme: 'light' | 'dark'; onComplete
   )
 }
 
-function Confetti() {
-  const [particles, setParticles] = useState<Array<{
-    id: number
-    x: number
-    y: number
-    color: string
-    rotation: number
-    velocity: { x: number; y: number }
-  }>>([])
-
+function InterstellarEffect({ onComplete }: { onComplete: () => void }) {
+  // Audio + timer
   useEffect(() => {
-    const colors = ['#5a9848', '#c9a85c', '#8ab878', '#e8e4d9', '#2d7828']
-    const newParticles = Array.from({ length: 100 }, (_, i) => ({
-      id: i,
-      x: Math.random() * window.innerWidth,
-      y: -10,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      rotation: Math.random() * 360,
-      velocity: {
-        x: (Math.random() - 0.5) * 10,
-        y: Math.random() * 5 + 5,
-      },
-    }))
-    setParticles(newParticles)
+    const audio = new Audio('/audio/interstellar.mp3')
+    audio.volume = 0.7
+    audio.play().catch(() => {})
 
-    const interval = setInterval(() => {
-      setParticles(prev =>
-        prev.map(p => ({
-          ...p,
-          x: p.x + p.velocity.x,
-          y: p.y + p.velocity.y,
-          rotation: p.rotation + 5,
-          velocity: { ...p.velocity, y: p.velocity.y + 0.2 },
-        })).filter(p => p.y < window.innerHeight + 100)
-      )
-    }, 16)
+    const timer = setTimeout(() => onComplete(), 10000)
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => {
+      audio.pause()
+      audio.src = ''
+      clearTimeout(timer)
+    }
+  }, [onComplete])
 
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
-      {particles.map(p => (
+    <>
+      <style>{`
+        @keyframes waveExpand {
+          0% { width: 50px; height: 50px; opacity: 0.6; border-width: 2px; }
+          100% { width: 600px; height: 600px; opacity: 0; border-width: 0.5px; }
+        }
+        @keyframes diskRotate {
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+      `}</style>
+
+      <div className="fixed inset-0 z-[100] pointer-events-none">
+        {[0, 1, 2, 3].map(i => (
+          <div
+            key={i}
+            className="absolute rounded-full border border-amber-500/40"
+            style={{
+              left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+              width: '50px', height: '50px',
+              animation: `waveExpand 3s ease-out ${i * 0.75}s infinite`,
+            }}
+          />
+        ))}
+
         <div
-          key={p.id}
-          className="absolute w-3 h-3"
+          className="absolute"
           style={{
-            left: p.x,
-            top: p.y,
-            backgroundColor: p.color,
-            transform: `rotate(${p.rotation}deg)`,
+            left: '50%', top: '50%', width: '300px', height: '300px',
+            transform: 'translate(-50%, -50%)', borderRadius: '50%',
+            background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,147,41,0.15) 30deg, rgba(255,177,71,0.4) 90deg, rgba(255,197,101,0.6) 120deg, rgba(255,147,41,0.4) 180deg, transparent 210deg, rgba(255,127,21,0.3) 270deg, rgba(255,167,51,0.5) 300deg, transparent 360deg)',
+            filter: 'blur(20px)', animation: 'diskRotate 20s linear infinite',
           }}
         />
-      ))}
-    </div>
+
+        <div
+          className="absolute bg-black rounded-full"
+          style={{
+            left: '50%', top: '50%', width: '120px', height: '120px',
+            transform: 'translate(-50%, -50%)',
+            boxShadow: '0 0 60px 30px rgba(0,0,0,1), 0 0 100px 60px rgba(0,0,0,0.8)',
+          }}
+        />
+      </div>
+    </>
   )
 }
+
+
