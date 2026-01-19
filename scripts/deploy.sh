@@ -25,6 +25,7 @@ fi
 echo "==> Copying static files..."
 cp -r public .next/standalone/ 2>/dev/null || true
 cp -r .next/static .next/standalone/.next/
+cp -r .claude .next/standalone/ 2>/dev/null || true
 
 echo "==> Restarting application..."
 pm2 restart site --update-env || pm2 start ecosystem.config.js
