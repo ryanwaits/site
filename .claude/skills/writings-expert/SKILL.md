@@ -11,10 +11,10 @@ Ryan writes when he figures something out. These posts capture his thinking on d
 
 | Topic | Post Path |
 |-------|-----------|
-| OpenPKG, TypeScript specs, API extraction | `app/n/how-does-this-not-exist/page.mdx` |
-| Standard JSON Schema, runtime introspection, Zod | `app/n/new-standard-who-dis/page.mdx` |
-| Agent-native architecture, primitives, LLM tooling | `app/n/features-dont-compose/page.mdx` |
-| doccov, documentation coverage, deleting code | `app/n/2000-to-100/page.mdx` |
+| OpenPKG, TypeScript specs, API extraction | `content/how-does-this-not-exist/index.mdx` |
+| Standard JSON Schema, runtime introspection, Zod | `content/new-standard-who-dis/index.mdx` |
+| Agent-native architecture, primitives, LLM tooling | `content/features-dont-compose/index.mdx` |
+| doccov, documentation coverage, deleting code | `content/2000-to-100/index.mdx` |
 
 ## Tone
 

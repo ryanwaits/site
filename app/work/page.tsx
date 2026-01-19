@@ -3,25 +3,7 @@
 import Link from 'next/link'
 import { SiteNav } from '../components/site-nav'
 import { SiteFooter } from '../components/site-footer'
-
-const PROJECTS = [
-  {
-    slug: 'openpkg',
-    name: 'openpkg',
-    tagline: 'OpenAPI for TypeScript packages',
-    description: 'Extracts the public API from any TypeScript package. JSON Schema out. Wanted this to exist, so built it.',
-    status: 'Stable',
-    github: 'https://github.com/ryanwaits/openpkg'
-  },
-  {
-    slug: 'doccov',
-    name: 'doccov',
-    tagline: 'Codecov for documentation',
-    description: 'Documentation coverage. Started as 2000 lines of TypeScript, now 100 lines of prompts. Deleted 95% of the code. Tool got better.',
-    status: 'MVP',
-    github: 'https://github.com/ryanwaits/doccov'
-  },
-]
+import { PROJECTS } from '@/lib/projects'
 
 export default function WorkPage() {
   return (

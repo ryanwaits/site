@@ -5,13 +5,25 @@ import { type CodeInfo, flagsToOptions, theme } from './code.config';
 import { CopyButton } from './code.copy';
 import { getHandlers } from './code.handlers';
 import { CodeIcon } from './code.icon';
+import { Terminal } from './code.terminal';
 
+/**
+ * Main DocsKit code component with smart routing.
+ * Routes to Terminal for bash/shell, otherwise renders as standard code block.
+ */
 export async function DocsKitCode(props: {
   codeblock: RawCode;
   handlers?: AnnotationHandler[];
   className?: string;
 }): Promise<React.JSX.Element> {
   const { codeblock, className, ...rest } = props;
+  const lang = codeblock.lang?.toLowerCase();
+
+  // Route terminal/bash/shell to Terminal component
+  if (lang === 'terminal' || lang === 'bash' || lang === 'sh' || lang === 'shell') {
+    return <Terminal codeblock={codeblock} handlers={rest.handlers} />;
+  }
+
   const group = await toCodeGroup({ codeblocks: [codeblock], ...rest });
   return <SingleCode group={group} className={className} />;
 }
@@ -25,40 +37,36 @@ export async function SingleCode(props: {
   const showCopy = options?.copyButton;
 
   return (
-    <div
+    <figure
       className={cn(
-        'group rounded overflow-hidden relative border-dk-border flex flex-col border my-4 not-prose',
+        'group relative my-4 not-prose overflow-hidden rounded-sm bg-dk-tabs-background',
         props.className,
       )}
     >
       {title ? (
-        <div
+        <figcaption
           className={cn(
-            'border-b-[1px] border-dk-border bg-dk-tabs-background px-3 py-0',
-            'w-full h-9 flex items-center shrink-0',
+            'flex h-8 items-center px-4',
             'text-dk-tab-inactive-foreground text-sm font-mono',
           )}
         >
-          <div className="flex items-center h-5 gap-2">
-            <div className="size-4">{icon}</div>
+          <div className="flex items-center gap-2">
+            <div className="size-4 opacity-60">{icon}</div>
             <span className="leading-none">{title}</span>
           </div>
-        </div>
+        </figcaption>
       ) : null}
-      <div className="relative flex items-start">
+      <div className="relative">
         {pre}
         {showCopy && (
           <CopyButton
             text={code}
             variant="floating"
-            className={cn(
-              'absolute right-3 z-10 text-dk-tab-inactive-foreground',
-              title ? 'top-3' : 'top-1/2 -translate-y-1/2',
-            )}
+            className="absolute right-2 top-3 z-10 text-dk-tab-inactive-foreground"
           />
         )}
       </div>
-    </div>
+    </figure>
   );
 }
 
@@ -92,7 +100,7 @@ export async function toCodeGroup(props: {
         pre: (
           <Pre
             code={highlighted}
-            className="overflow-auto px-0 py-3 m-0 rounded-none !bg-dk-background selection:bg-dk-selection selection:text-current max-h-full flex-1"
+            className="overflow-auto py-2 m-0 rounded-none !bg-transparent selection:bg-dk-selection selection:text-current max-h-full flex-1"
             style={highlightedStyle}
             handlers={handlers}
           />

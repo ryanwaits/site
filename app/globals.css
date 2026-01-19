@@ -350,9 +350,25 @@ pre {
   background-color: var(--code-bg);
   border-radius: 0.5rem;
   overflow-x: auto;
+  line-height: 1;
+}
+
+/* Apply default padding/margin to prose pre elements */
+pre {
   padding: 1rem;
   margin: 1.5rem 0;
-  line-height: 1;
+}
+
+/* Reset for docskit code blocks (inside .not-prose figures) */
+.not-prose pre {
+  padding: 1rem 0;
+  margin: 0;
+}
+
+/* Terminal blocks (with figcaption header) - less top padding since header provides space */
+.not-prose figcaption + pre {
+  padding-top: 0.75rem;
+  padding-bottom: 1.25rem;
 }
 
 

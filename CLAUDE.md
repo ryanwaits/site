@@ -22,7 +22,7 @@ Personal site: Next.js 15, React 19, MDX, Tailwind v4.
 ### Content Structure
 - `app/page.mdx` — Homepage
 - `app/work/page.mdx` — Work page
-- `app/n/*/page.mdx` — Notes/blog posts (auto-discovered by sitemap.ts)
+- `content/*/index.mdx` — Blog posts (fumadocs source, renders at /t/[slug])
 - MDX files can import React components directly
 
 ### Key Files
@@ -38,5 +38,5 @@ Personal site: Next.js 15, React 19, MDX, Tailwind v4.
 - Postgres redirects loaded at build time (requires POSTGRES_URL env var)
 
 ### TypeScript
-- `app/n/ai/*.tsx` excluded from type checking (tsconfig.json)
+- `content/ai/*.tsx` excluded from type checking (tsconfig.json)
 - Path alias: `@/*` → project root

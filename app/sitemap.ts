@@ -7,7 +7,7 @@ async function getNoteSlugs(dir: string) {
     withFileTypes: true,
   });
   return entries
-    .filter((entry) => entry.isFile() && entry.name === 'page.mdx')
+    .filter((entry) => entry.isFile() && entry.name === 'index.mdx')
     .map((entry) => {
       const relativePath = path.relative(
         dir,
@@ -19,11 +19,11 @@ async function getNoteSlugs(dir: string) {
 }
 
 export default async function sitemap() {
-  const notesDirectory = path.join(process.cwd(), 'app', 'n');
+  const notesDirectory = path.join(process.cwd(), 'content');
   const slugs = await getNoteSlugs(notesDirectory);
 
   const notes = slugs.map((slug) => ({
-    url: `https://ryanwaits.com/n/${slug}`,
+    url: `https://ryanwaits.com/t/${slug}`,
     lastModified: new Date().toISOString(),
   }));
 

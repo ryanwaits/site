@@ -22,10 +22,10 @@ export function CopyButton({
         'cursor-pointer transition-opacity duration-200',
         variant === 'floating' && [
           'size-8 flex items-center justify-center',
-          'rounded border border-dk-border bg-dk-background',
+          'rounded-sm bg-dk-tabs-background hover:bg-dk-background',
           'opacity-0 group-hover:opacity-100',
         ],
-        variant === 'inline' && 'rounded',
+        variant === 'inline' && 'rounded-sm',
         className,
       )}
       onClick={() => {
@@ -33,6 +33,7 @@ export function CopyButton({
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       }}
+      title="Copy to clipboard"
       aria-label="Copy to clipboard"
     >
       {copied ? <Check size={16} className="block" /> : <Copy size={16} className="block" />}

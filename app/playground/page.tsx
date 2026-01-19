@@ -3,31 +3,17 @@
 import { SiteNav } from '../components/site-nav'
 import { SiteFooter } from '../components/site-footer'
 import { AmigoCard } from './components/amigo-card'
+import { EXPERIMENTS as EXPERIMENTS_DATA, COMING_SOON } from '@/lib/experiments'
 
-const EXPERIMENTS: Array<{
-  id: string
-  name: string
-  tagline: string
-  description: string
-  component: React.ComponentType
-  links: { github?: string; post?: string }
-}> = [
-  {
-    id: 'amigo',
-    name: 'Amigo',
-    tagline: 'Learn Spanish through real situations',
-    description: 'Personalized flashcard sprints with spaced repetition. Train for specific scenarios — ordering at a taqueria, meeting someone\'s parents, traveling in Mexico.',
-    component: AmigoCard,
-    links: {
-      github: 'https://github.com/ryanwaits/amigo',
-    }
-  },
-]
+// Map experiment data to include React components
+const COMPONENT_MAP: Record<string, React.ComponentType> = {
+  amigo: AmigoCard,
+}
 
-const COMING_SOON = [
-  { name: 'doccov', description: 'Documentation coverage analysis' },
-  { name: 'openpkg', description: 'TypeScript API extraction' },
-]
+const EXPERIMENTS = EXPERIMENTS_DATA.map((exp) => ({
+  ...exp,
+  component: COMPONENT_MAP[exp.id],
+}))
 
 export default function PlaygroundPage() {
   return (

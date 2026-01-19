@@ -1,5 +1,7 @@
+import type { MDXComponents } from 'mdx/types';
 import React, { ComponentPropsWithoutRef } from 'react';
 import { Link } from 'next-view-transitions';
+import { DocsKitCode, DocsKitInlineCode } from '@/app/components/docskit';
 import { MdxPre, MdxCode } from '@/app/components/mdx-code';
 
 type HeadingProps = ComponentPropsWithoutRef<'h1'>;
@@ -9,7 +11,7 @@ type ListItemProps = ComponentPropsWithoutRef<'li'>;
 type AnchorProps = ComponentPropsWithoutRef<'a'>;
 type BlockquoteProps = ComponentPropsWithoutRef<'blockquote'>;
 
-const components = {
+export const components = {
   h1: (props: HeadingProps) => (
     <h1
       className="font-serif text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.1] pt-4 mb-8"
@@ -114,12 +116,14 @@ const components = {
     />
   ),
   hr: () => <hr className="border-t border-[var(--color-border)] my-12" />,
+  // CodeHike components (called by fumadocs-mdx with codehike plugins)
+  DocsKitCode,
+  DocsKitInlineCode,
 };
 
-declare global {
-  type MDXProvidedComponents = typeof components;
-}
-
-export function useMDXComponents(): MDXProvidedComponents {
-  return components;
+export function useMDXComponents(existingComponents: MDXComponents = {}): MDXComponents {
+  return {
+    ...existingComponents,
+    ...components,
+  };
 }

@@ -1,13 +1,13 @@
 import { cookies } from 'next/headers'
 import { query } from '@anthropic-ai/claude-agent-sdk'
-import { getPosts } from '@/app/n/posts.server'
+import { getPosts } from '@/content/posts.server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
 // Read post content by slug (for @mentions)
 async function getPostContent(slug: string): Promise<string | null> {
   try {
-    const filePath = path.join(process.cwd(), 'app', 'n', slug, 'page.mdx')
+    const filePath = path.join(process.cwd(), 'content', slug, 'index.mdx')
     const content = await fs.readFile(filePath, 'utf-8')
     return content
   } catch {
@@ -55,11 +55,11 @@ All In Pod, AI/tech startup content. Obsessed with pace of industry change. Has 
 - doccov - Documentation coverage tool
 - chainhooks-mcp - MCP server for Chainhooks
 
-## Writings (at /n/[slug])
-- /n/how-does-this-not-exist - Why TypeScript needs an OpenAPI-style spec (intro to OpenPKG)
-- /n/new-standard-who-dis - Standard JSON Schema and runtime introspection
-- /n/features-dont-compose - Agent-native architecture: primitives over features
-- /n/2000-to-100 - Deleted 95% of doccov's code, replaced with prompts
+## Writings (at /t/[slug])
+- /t/how-does-this-not-exist - Why TypeScript needs an OpenAPI-style spec (intro to OpenPKG)
+- /t/new-standard-who-dis - Standard JSON Schema and runtime introspection
+- /t/features-dont-compose - Agent-native architecture: primitives over features
+- /t/2000-to-100 - Deleted 95% of doccov's code, replaced with prompts
 
 ## Response Style (CRITICAL)
 You're in a terminal. Respond like CLI output:

@@ -24,14 +24,14 @@ export function MultiCode({
       value={currentTitle}
       onValueChange={setCurrentTitle}
       className={cn(
-        'group border rounded selection:bg-dk-selection selection:text-current border-dk-border overflow-hidden relative flex flex-col max-h-full min-h-0 my-4 gap-0 not-prose',
+        'group selection:bg-dk-selection selection:text-current overflow-hidden relative flex flex-col max-h-full min-h-0 my-4 gap-0 not-prose rounded-sm bg-dk-tabs-background',
         className,
       )}
     >
       <TabsList
         className={cn(
-          'border-b border-dk-border bg-dk-tabs-background w-full h-9 min-h-9 shrink-0',
-          'rounded-none p-0 m-0 justify-start items-stretch',
+          'bg-transparent w-full h-8 min-h-8 shrink-0',
+          'rounded-none p-0 m-0 justify-start items-stretch gap-0',
         )}
       >
         {group.tabs.map(({ icon, title }, _index) => (
@@ -39,13 +39,12 @@ export function MultiCode({
             key={title}
             value={title}
             className={cn(
-              'rounded-none transition-colors duration-200 gap-1.5 px-3 font-mono justify-start grow-0',
-              'border-r border-dk-border',
+              'rounded-none transition-colors duration-200 gap-1.5 px-4 font-mono justify-start grow-0',
               'text-dk-tab-inactive-foreground data-[state=active]:text-dk-tab-active-foreground hover:text-dk-tab-active-foreground',
-              'data-[state=active]:bg-dk-background/50',
+              'data-[state=active]:bg-dk-background/30',
             )}
           >
-            <div>{icon}</div>
+            <div className="opacity-60">{icon}</div>
             <span className="leading-none">{title}</span>
           </TabsTrigger>
         ))}
@@ -56,7 +55,7 @@ export function MultiCode({
           <CopyButton
             text={code}
             variant="floating"
-            className="absolute right-3 top-3 z-10 text-dk-tab-inactive-foreground"
+            className="absolute right-2 top-3 z-10 text-dk-tab-inactive-foreground"
           />
         )}
       </TabsContent>

@@ -149,6 +149,126 @@ Started as 2000 lines of TypeScript. Now it's 100 lines of prompts. Deleted 95% 
       }
     ]
   },
+  secondlayer: {
+    name: 'secondlayer',
+    tagline: 'Type-safe Clarity contract interfaces',
+    status: 'Stable',
+    sections: [
+      {
+        id: 'problem',
+        title: 'The Problem',
+        content: `Clarity contracts have no TypeScript integration. Manual type definitions drift. Call parameters are untyped strings.
+
+You deploy a contract with 20 functions. Every call site in your app? Untyped. Every parameter? Hope you got the order right.`,
+        terminal: {
+          output: [
+            '// Calling a Clarity contract today',
+            '',
+            'await contractCall({',
+            '  contractAddress: "SP2...",',
+            '  contractName: "my-contract",',
+            '  functionName: "transfer",',
+            '  functionArgs: [',
+            '    uintCV(100),      // amount? recipient?',
+            '    principalCV(to),  // is this right?',
+            '  ]',
+            '})',
+            '',
+            '// No autocomplete. No type errors.',
+            '// Find bugs in production.',
+          ]
+        }
+      },
+      {
+        id: 'solution',
+        title: 'The Solution',
+        content: `secondlayer generates type-safe interfaces from contract source or deployed contracts.
+
+Point at a contract address or local file. Auto-infers network from address prefix. Get TypeScript that knows your contract.`,
+        terminal: {
+          command: 'npx secondlayer generate SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait',
+          typing: true,
+          output: [
+            '$ npx secondlayer generate SP2PABAF...nft-trait',
+            '',
+            '◐ Fetching contract from mainnet...',
+            '◐ Parsing Clarity source...',
+            '◐ Generating TypeScript interfaces...',
+          ]
+        }
+      },
+      {
+        id: 'output',
+        title: 'The Output',
+        content: `Generated interfaces match your contract exactly. Helper functions for read/write calls. Type-safe parameters — wrong types don't compile.
+
+Every public function. Every argument. Every return type.`,
+        terminal: {
+          output: [
+            '// Generated: nft-trait.ts',
+            '',
+            'export interface NftTrait {',
+            '  getLastTokenId(): Promise<Response<uint, never>>;',
+            '  getTokenUri(tokenId: uint): Promise<Response<string, uint>>;',
+            '  getOwner(tokenId: uint): Promise<Response<principal, uint>>;',
+            '  transfer(',
+            '    tokenId: uint,',
+            '    sender: principal,',
+            '    recipient: principal',
+            '  ): Promise<Response<boolean, uint>>;',
+            '}',
+            '',
+            '// Now TypeScript catches the bugs.',
+          ]
+        }
+      },
+      {
+        id: 'plugins',
+        title: 'Plugins',
+        content: `Extend generation with plugins. clarinet() reads from Clarinet projects. react() generates hooks. testing() adds mock helpers.
+
+Pick what you need. Skip what you don't.`,
+        terminal: {
+          output: [
+            '// secondlayer.config.ts',
+            '',
+            'import { defineConfig } from "secondlayer";',
+            'import { clarinet } from "secondlayer/plugins";',
+            'import { react } from "secondlayer/plugins";',
+            '',
+            'export default defineConfig({',
+            '  plugins: [',
+            '    clarinet(),      // read from Clarinet.toml',
+            '    react(),         // generate useContract hooks',
+            '  ],',
+            '  outDir: "./generated"',
+            '});',
+          ]
+        }
+      },
+      {
+        id: 'install',
+        title: 'Get Started',
+        content: `Install. Run. Get types. Zero config for basic usage — just point at a contract address and go.`,
+        terminal: {
+          command: 'npm install secondlayer',
+          output: [
+            '$ npm install secondlayer',
+            '+ secondlayer@0.5.0',
+            '',
+            '$ npx secondlayer generate SP2...my-contract',
+            '',
+            '✓ Generated my-contract.ts',
+            '✓ 12 functions typed',
+            '✓ 4 read-only functions',
+            '✓ 8 public functions',
+            '',
+            '→ ./generated/my-contract.ts',
+          ]
+        }
+      }
+    ]
+  },
   openpkg: {
     name: 'openpkg',
     tagline: 'OpenAPI for TypeScript packages',

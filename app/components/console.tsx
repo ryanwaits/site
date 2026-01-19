@@ -6,7 +6,7 @@ import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import { serialize } from 'next-mdx-remote/serialize'
 import { highlight } from 'sugar-high'
 import { viewComponents } from './view-components'
-import type { Post } from '@/app/n/posts'
+import type { Post } from '@/content/posts'
 
 type SandboxStatus = 'idle' | 'creating' | 'cloning' | 'installing' | 'ready' | 'error'
 

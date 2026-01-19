@@ -1,12 +1,10 @@
-import { AnimatedName } from '../animated-name.tsx';
+---
+title: Features Don't Compose
+description: The agent doesn't need your features — it needs your surfaces.
+date: January 2026
+---
 
-export const metadata = {
-  title: "Features Don't Compose",
-  description: "The agent doesn't need your features — it needs your surfaces.",
-  alternates: {
-    canonical: '/n/features-dont-compose',
-  },
-};
+import { AnimatedName } from '../animated-name.tsx';
 
 <AnimatedName date="January 2026" />
 
@@ -18,7 +16,7 @@ Then I read ["Agent-Native Architecture"](https://blog.val.town/blog/agent-nativ
 
 > "Prefer atomic primitives. Features are outcomes achieved by an agent in a loop."
 
-[OpenPKG](/n/how-does-this-not-exist) had compound commands: `coverage`, `audit`, `report`. Feature-rich. Helpful defaults. The kind of CLI developers expect.
+[OpenPKG](/t/how-does-this-not-exist) had compound commands: `coverage`, `audit`, `report`. Feature-rich. Helpful defaults. The kind of CLI developers expect.
 
 But those compound commands were just compositions of simpler operations. `coverage` was really `list` + `get` + compare to docs. `audit` was `snapshot` + `diff`. Every "feature" decomposed into the same five primitives.
 

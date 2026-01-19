@@ -1,4 +1,4 @@
-import createMDX from "@next/mdx";
+import { createMDX } from "fumadocs-mdx/next";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -6,6 +6,6 @@ const nextConfig = {
   pageExtensions: ["mdx", "ts", "tsx"],
 };
 
-const withMDX = createMDX({});
+const withMDX = createMDX();
 
 export default withMDX(nextConfig);

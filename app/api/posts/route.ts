@@ -1,4 +1,4 @@
-import { getPosts } from '@/app/n/posts.server'
+import { getPosts } from '@/content/posts.server'
 
 export async function GET() {
   const posts = await getPosts()

@@ -1,12 +1,12 @@
 import { type AnnotationHandler, highlight, Pre, type RawCode } from 'codehike/code';
 
-import { cn } from '@/lib/utils';
 import { flagsToOptions, theme } from './code.config';
 import { CopyButton } from './code.copy';
 import { getHandlers } from './code.handlers';
 
 /**
- * Terminal-style code block with macOS window controls.
+ * Terminal-style code block inspired by OpenCode's design.
+ * Features subtle gray dots and minimal styling.
  */
 export async function Terminal(props: {
   codeblock: RawCode;
@@ -24,48 +24,38 @@ export async function Terminal(props: {
   }
 
   const { background: _background, ...highlightedStyle } = highlighted.style;
-  const showCopy = options?.copyButton;
-  const isMultiLine = highlighted.code.includes('\n');
+  const showCopy = options?.copyButton !== false;
 
   return (
-    <div className="group rounded overflow-hidden relative border-dk-border flex flex-col border my-4 not-prose">
-      {/* Terminal header with macOS dots */}
-      <div
-        className={cn(
-          'border-b border-dk-border bg-dk-tabs-background',
-          'w-full h-9 flex items-center justify-center shrink-0',
-          'relative',
-        )}
-      >
-        {/* macOS window controls (3 dots) */}
-        <div className="absolute left-3 flex items-center gap-2">
-          <div className="size-3 rounded-full bg-dk-tab-inactive-foreground/30" />
-          <div className="size-3 rounded-full bg-dk-tab-inactive-foreground/30" />
-          <div className="size-3 rounded-full bg-dk-tab-inactive-foreground/30" />
+    <figure className="group relative my-4 not-prose overflow-hidden rounded-sm bg-dk-tabs-background">
+      {/* Terminal header with subtle dots */}
+      <figcaption className="relative flex h-8 items-center px-4">
+        {/* Three subtle dots */}
+        <div className="flex items-center gap-1.5">
+          <div className="size-2.5 rounded-full bg-dk-tab-inactive-foreground/40" />
+          <div className="size-2.5 rounded-full bg-dk-tab-inactive-foreground/40" />
+          <div className="size-2.5 rounded-full bg-dk-tab-inactive-foreground/40" />
         </div>
         <span className="sr-only">Terminal window</span>
-      </div>
+      </figcaption>
 
       {/* Code content */}
-      <div className="relative flex items-start">
-        <Pre
-          code={highlighted}
-          className="overflow-auto px-0 py-3 m-0 rounded-none !bg-dk-background selection:bg-dk-selection selection:text-current max-h-full flex-1"
-          style={highlightedStyle}
-          handlers={handlers}
+      <Pre
+        code={highlighted}
+        className="overflow-auto m-0 rounded-none !bg-transparent selection:bg-dk-selection selection:text-current py-2 pr-12"
+        style={highlightedStyle}
+        handlers={handlers}
+      />
+
+      {/* Copy button */}
+      {showCopy && (
+        <CopyButton
+          text={highlighted.code}
+          variant="floating"
+          className="absolute right-2 top-10 z-10 text-dk-tab-inactive-foreground"
         />
-        {showCopy && (
-          <CopyButton
-            text={highlighted.code}
-            variant="floating"
-            className={cn(
-              'absolute right-3 z-10 text-dk-tab-inactive-foreground',
-              isMultiLine ? 'top-3' : 'top-1/2 -translate-y-1/2',
-            )}
-          />
-        )}
-      </div>
-    </div>
+      )}
+    </figure>
   );
 }
 

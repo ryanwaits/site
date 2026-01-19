@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { SiteNav } from '../components/site-nav'
 import { SiteFooter } from '../components/site-footer'
-import { getPosts } from '../n/posts.server'
+import { getPosts } from '@/content/posts.server'
 
 export default async function TextPage() {
   const posts = await getPosts()
@@ -24,7 +24,7 @@ export default async function TextPage() {
           <section className="space-y-6">
             {posts.map((post) => (
               <article key={post.slug}>
-                <Link href={`/n/${post.slug}`} className="group block">
+                <Link href={`/t/${post.slug}`} className="group block">
                   <time className="font-mono text-xs uppercase tracking-wider text-[var(--color-muted)] block mb-1">
                     {post.date}
                   </time>

@@ -15,7 +15,7 @@ const NAV_ITEMS = [
 function getParentRoute(pathname: string): string | null {
   // Define route mappings: prefix → parent
   const routeMappings: Array<{ prefix: string; parent: string }> = [
-    { prefix: '/n/', parent: '/text' },           // Blog posts → Text
+    { prefix: '/t/', parent: '/text' },           // Blog posts → Text
     { prefix: '/playground/', parent: '/playground' },
     { prefix: '/work/', parent: '/work' },
     { prefix: '/jobs/', parent: '/jobs' },
@@ -38,8 +38,8 @@ export function SiteNav() {
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
-    // /n/* posts belong to Text section
-    if (href === '/text' && pathname.startsWith('/n/')) return true;
+    // /t/* posts belong to Text section
+    if (href === '/text' && pathname.startsWith('/t/')) return true;
     return pathname === href || pathname.startsWith(href + '/');
   };
 
@@ -63,7 +63,7 @@ export function SiteNav() {
         }
       }
 
-      // Arrow key navigation through pages (only on main nav pages, not /n/* posts)
+      // Arrow key navigation through pages (only on main nav pages, not /t/* posts)
       const allPages = ['/', ...NAV_ITEMS.map(item => item.href)];
       const currentIndex = allPages.indexOf(pathname);
 

@@ -16,7 +16,7 @@ Available posts and their slugs:
 - `stack` - My Stack
 - `ai` - Understanding AI
 
-Use the Read tool to read the post at `app/n/$ARGUMENTS/page.mdx`.
+Use the Read tool to read the post at `content/$ARGUMENTS/index.mdx`.
 
 Then provide a thoughtful summary or discussion of the post. If the user asked a specific question about it, answer that. Otherwise, give a brief overview of the main points and offer to discuss further.
 

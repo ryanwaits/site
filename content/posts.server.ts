@@ -15,7 +15,7 @@ function parseDate(dateStr: string): number {
 }
 
 export async function getPosts(): Promise<Post[]> {
-  const notesDir = path.join(process.cwd(), 'app', 'n');
+  const notesDir = path.join(process.cwd(), 'content');
   const entries = await fs.readdir(notesDir, { withFileTypes: true });
 
   const posts: Post[] = [];
@@ -23,7 +23,7 @@ export async function getPosts(): Promise<Post[]> {
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
 
-    const mdxPath = path.join(notesDir, entry.name, 'page.mdx');
+    const mdxPath = path.join(notesDir, entry.name, 'index.mdx');
     try {
       const content = await fs.readFile(mdxPath, 'utf-8');
 

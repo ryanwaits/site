@@ -1,12 +1,10 @@
-import { AnimatedName } from '../animated-name.tsx';
+---
+title: How Does This Not Exist?
+description: REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.
+date: October 2025
+---
 
-export const metadata = {
-  title: 'How Does This Not Exist?',
-  description: 'REST APIs have OpenAPI. GraphQL has introspection. TypeScript packages have... nothing.',
-  alternates: {
-    canonical: '/n/how-does-this-not-exist',
-  },
-};
+import { AnimatedName } from '../animated-name.tsx';
 
 <AnimatedName date="October 2025" />
 
@@ -37,11 +35,11 @@ Introducing [OpenPKG](/work/openpkg) - an OpenAPI-style spec for TypeScript pack
 export function createClient(config: { baseUrl: string }): void {}
 ```
 
-```bash
+```bash -c
 npx @openpkg-ts/cli snapshot src/index.ts
 ```
 
-```json
+```json openpkg.json -n
 {
   "openpkg": "0.4.0",
   "exports": [
