@@ -18,7 +18,7 @@ const VIEW_SYSTEM_PROMPT = `You generate MDX views for Ryan Waits' personal webs
 - chainhooks-mcp - MCP server for Chainhook integration
 
 ## Writings (at /t/[slug])
-- /t/2000-to-100 - From 2000 Lines to 100 (deleted 95% of codebase, tool got better)
+- /t/tools-return-data - Tools Return Data, Agents Make Decisions (openpkg refactor for agent-native)
 - /t/features-dont-compose - Features Don't Compose (agents need surfaces, not features)
 - /t/new-standard-who-dis - New Standard, Who Dis? (Standard JSON Schema, runtime extraction)
 - /t/how-does-this-not-exist - How Does This Not Exist? (TypeScript packages have no OpenAPI equivalent)

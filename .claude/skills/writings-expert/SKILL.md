@@ -14,7 +14,7 @@ Ryan writes when he figures something out. These posts capture his thinking on d
 | OpenPKG, TypeScript specs, API extraction | `content/how-does-this-not-exist/index.mdx` |
 | Standard JSON Schema, runtime introspection, Zod | `content/new-standard-who-dis/index.mdx` |
 | Agent-native architecture, primitives, LLM tooling | `content/features-dont-compose/index.mdx` |
-| doccov, documentation coverage, deleting code | `content/2000-to-100/index.mdx` |
+| openpkg refactor, tools return data, agent decisions | `content/tools-return-data/index.mdx` |
 
 ## Tone
 

@@ -29,7 +29,7 @@ Still figuring it out. Building things to learn:
 
 **[openpkg](https://github.com/ryanwaits/openpkg)** — Extracts the public API from any TypeScript package. JSON Schema out. One command. I wanted OpenAPI for packages — turns out it didn't exist, so I built it.
 
-**[doccov](https://github.com/ryanwaits/doccov)** — Documentation coverage. Started as 2000 lines of TypeScript, now 100 lines of prompts. Deleted 95% of the code. The tool got better. [Wrote about it](/t/2000-to-100).
+**[doccov](https://github.com/ryanwaits/doccov)** — Documentation coverage tool built on openpkg.
 
 **[secondlayer](https://github.com/ryanwaits/secondlayer)** — Type-safe TypeScript from Clarity contracts. Point at a contract, get interfaces, helpers, React hooks. No manual type definitions.
 
@@ -39,7 +39,7 @@ Still figuring it out. Building things to learn:
 
 I write when I figure something out:
 
-- **[From 2000 Lines to 100](/t/2000-to-100)** — What happens when you replace code with prompts.
+- **[Tools Return Data, Agents Make Decisions](/t/tools-return-data)** — The refactor that made openpkg agent-native.
 - **[Features Don't Compose](/t/features-dont-compose)** — Why agents need primitives, not features.
 - **[How Does This Not Exist?](/t/how-does-this-not-exist)** — The missing standard for TypeScript packages.
 

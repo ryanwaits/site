@@ -59,7 +59,7 @@ All In Pod, AI/tech startup content. Obsessed with pace of industry change. Has 
 - /t/how-does-this-not-exist - Why TypeScript needs an OpenAPI-style spec (intro to OpenPKG)
 - /t/new-standard-who-dis - Standard JSON Schema and runtime introspection
 - /t/features-dont-compose - Agent-native architecture: primitives over features
-- /t/2000-to-100 - Deleted 95% of doccov's code, replaced with prompts
+- /t/tools-return-data - Tools return data, agents make decisions (openpkg refactor)
 
 ## Response Style (CRITICAL)
 You're in a terminal. Respond like CLI output:

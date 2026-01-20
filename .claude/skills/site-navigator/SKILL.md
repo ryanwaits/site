@@ -16,7 +16,7 @@ Help users discover and navigate Ryan's site content.
 ├── /text - Writings/notes
 ├── /experiments - Playground/experiments
 └── /n/ - Individual posts
-    ├── /n/2000-to-100 - From 2000 Lines to 100
+    ├── /n/tools-return-data - Tools Return Data, Agents Make Decisions
     ├── /n/features-dont-compose - Features Don't Compose
     ├── /n/new-standard-who-dis - New Standard, Who Dis?
     └── /n/how-does-this-not-exist - How Does This Not Exist?

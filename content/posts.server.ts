@@ -3,15 +3,9 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import type { Post } from './posts';
 
-// Parse date string like "January 2026" into sortable timestamp
+// Parse YYYY-MM-DD date string into sortable timestamp
 function parseDate(dateStr: string): number {
-  const months: Record<string, number> = {
-    'January': 0, 'February': 1, 'March': 2, 'April': 3,
-    'May': 4, 'June': 5, 'July': 6, 'August': 7,
-    'September': 8, 'October': 9, 'November': 10, 'December': 11
-  };
-  const [month, year] = dateStr.split(' ');
-  return new Date(parseInt(year), months[month] || 0).getTime();
+  return new Date(dateStr).getTime();
 }
 
 export async function getPosts(): Promise<Post[]> {

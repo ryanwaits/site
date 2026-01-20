@@ -1,0 +1,77 @@
+---
+title: Tools Return Data, Agents Make Decisions
+description: Less logic in code, more power for agents.
+date: 2026-01-19
+---
+
+import { AnimatedName } from '../animated-name.tsx';
+
+<AnimatedName date="2026-01-19" />
+
+# Tools Return Data, Agents Make Decisions
+
+After writing ["Features Don't Compose"](/t/features-dont-compose), I had five primitives. Clean. Atomic. But the agent story was incomplete.
+
+An agent could call `openpkg diff old.json new.json` and get a wall of changes. But what it really wanted was: "are there breaking changes?" That required parsing the output, counting items, deciding what mattered. Logic that belonged in the tool, not the prompt.
+
+## The gap
+
+The primitives were right. The outputs were wrong.
+
+`diff` returned everything. But CI pipelines don't want everything — they want a gate. Breaking changes? Exit 1. No breaking changes? Exit 0. Simple.
+
+`docs` generated markdown. But what if you're using Fumadocs? Or Nextra? Or some custom thing? The agent had no way to say "generate docs in this format" without code changes.
+
+The tool was doing too much and not enough at the same time.
+
+## The refactor
+
+I broke `diff` into three commands:
+
+```bash
+openpkg breaking old.json new.json   # exit 1 if breaking, exit 0 if not
+openpkg semver old.json new.json     # { bump: "major" | "minor" | "patch" }
+openpkg changelog old.json new.json  # markdown for release notes
+```
+
+Same underlying diff. Three different answers to three different questions. The agent doesn't parse output and decide — it asks the right question and gets a direct answer.
+
+For docs, I added an adapter registry:
+
+```bash
+openpkg docs spec.json --adapter fumadocs -o ./docs
+```
+
+Now adding a new output format is registering an adapter, not forking the codebase.
+
+## filterSpec
+
+The real primitive that emerged was `filterSpec()`. Given a spec and criteria, return a filtered spec:
+
+```typescript
+const result = filterSpec(spec, {
+  kinds: ['function', 'class'],
+  deprecated: false,
+  hasDescription: true
+});
+```
+
+Immutable. Composable. The agent can filter before rendering, filter before diffing, filter before anything. One primitive unlocks a dozen workflows I never designed for.
+
+## The philosophy
+
+I kept coming back to a simple test: who decides?
+
+If the tool decides, it's a feature. Features don't compose. If the agent decides based on data the tool returns, it's a primitive. Primitives compose.
+
+`breaking` doesn't decide what counts as breaking — the spec package defines that. But it does give a clean yes/no that an agent can act on. `diagnostics` doesn't decide if missing descriptions are acceptable — it just reports them. The agent (or the human, or the CI config) decides what to do with that information.
+
+Tools return data. Agents make decisions.
+
+## What changed
+
+The CLI went from 5 commands to 9. But the surface area for agent composition went from "possible" to "natural." Exit codes map to CI gates. JSON output maps to downstream tools. Adapters map to whatever doc framework you're using.
+
+New capability = new prompt, sometimes new adapter. Rarely new code.
+
+That's the bar now. If I'm writing logic that feels like judgment — what matters, what's acceptable, what should happen — it probably doesn't belong in code.
