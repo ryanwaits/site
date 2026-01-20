@@ -179,16 +179,6 @@ export function SiteNav() {
               );
             })}
 
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                window.dispatchEvent(new Event('toggle-agent'));
-              }}
-              className="block font-mono text-sm uppercase tracking-wider text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors duration-150"
-            >
-              <span className="opacity-50">[A]</span>
-              <span className="ml-2">Agent</span>
-            </button>
           </div>
         </div>
       )}

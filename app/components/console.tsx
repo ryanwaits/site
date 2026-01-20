@@ -1144,6 +1144,11 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     }
   }
 
+  // Hide entirely on mobile - not a good experience yet
+  if (isMobile) {
+    return null
+  }
+
   // Console closed - show toggle button (unless hideButton)
   if (!isOpen) {
     if (hideButton) return null
@@ -1157,8 +1162,7 @@ export function Console({ onCommand, hideButton }: ConsoleProps) {
     )
   }
 
-  // Console open but isMobile not yet detected - render nothing to prevent flash
-  // (avoids desktop layout briefly rendering on mobile causing horizontal overflow)
+  // isMobile not yet detected - render nothing to prevent flash
   if (isMobile === null) {
     return null
   }

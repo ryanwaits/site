@@ -44,34 +44,36 @@ openpkg docs spec.json --adapter fumadocs -o ./docs
 
 Now adding a new output format is registering an adapter, not forking the codebase.
 
-## filterSpec
+## filter
 
-The real primitive that emerged was `filterSpec()`. Given a spec and criteria, return a filtered spec:
+The real primitive that emerged was `filter`. Given a spec and criteria, return a filtered spec:
 
-```typescript
-const result = filterSpec(spec, {
-  kinds: ['function', 'class'],
-  deprecated: false,
-  hasDescription: true
-});
+```bash
+# By kind
+openpkg filter spec.json --kind function
+openpkg filter spec.json --kind type,interface
+
+# By name or search
+openpkg filter spec.json --name "createDocs,loadSpec"
+openpkg filter spec.json --search "parse"
+
+# By metadata
+openpkg filter spec.json --deprecated
+openpkg filter spec.json --has-description
+openpkg filter spec.json --missing-description
+
+# Just counts
+openpkg filter spec.json --kind function --summary
 ```
 
-Immutable. Composable. The agent can filter before rendering, filter before diffing, filter before anything. One primitive unlocks a dozen workflows I never designed for.
+The agent can filter before rendering, filter before diffing, filter before anything. One primitive unlocks a dozen workflows I never designed for.
 
 ## The philosophy
 
 I kept coming back to a simple test: who decides?
 
-If the tool decides, it's a feature. Features don't compose. If the agent decides based on data the tool returns, it's a primitive. Primitives compose.
+If the tool decides, it's a feature - and features don't compose. If the agent decides based on data the tool returns, it's a primitive - and primitives compose.
 
 `breaking` doesn't decide what counts as breaking — the spec package defines that. But it does give a clean yes/no that an agent can act on. `diagnostics` doesn't decide if missing descriptions are acceptable — it just reports them. The agent (or the human, or the CI config) decides what to do with that information.
 
 Tools return data. Agents make decisions.
-
-## What changed
-
-The CLI went from 5 commands to 9. But the surface area for agent composition went from "possible" to "natural." Exit codes map to CI gates. JSON output maps to downstream tools. Adapters map to whatever doc framework you're using.
-
-New capability = new prompt, sometimes new adapter. Rarely new code.
-
-That's the bar now. If I'm writing logic that feels like judgment — what matters, what's acceptable, what should happen — it probably doesn't belong in code.
