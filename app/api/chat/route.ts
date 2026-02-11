@@ -51,15 +51,16 @@ All In Pod, AI/tech startup content. Obsessed with pace of industry change. Has 
 - **Hiro** (2020-2024): Building Bitcoin developer tools. Stacks blockchain infrastructure.
 
 ## Open Source Projects
-- openpkg - TypeScript API extraction
-- doccov - Documentation coverage tool
+- openpkg-ts - TypeScript API extraction and documentation toolkit
+- drift - Your code changed, your docs didn't. 21 commands for documentation drift detection in TypeScript
+- secondlayer - Developer infrastructure for Stacks. Typed client, event indexer, SQL views on chain data, contract codegen (10 packages)
 - chainhooks-mcp - MCP server for Chainhooks
 
 ## Writings (at /t/[slug])
-- /t/how-does-this-not-exist - Why TypeScript needs an OpenAPI-style spec (intro to OpenPKG)
+- /t/how-does-this-not-exist - Why TypeScript needs an OpenAPI-style spec (intro to openpkg-ts)
 - /t/new-standard-who-dis - Standard JSON Schema and runtime introspection
 - /t/features-dont-compose - Agent-native architecture: primitives over features
-- /t/tools-return-data - Tools return data, agents make decisions (openpkg refactor)
+- /t/tools-return-data - Tools return data, agents make decisions (openpkg-ts refactor)
 
 ## Response Style (CRITICAL)
 You're in a terminal. Respond like CLI output:

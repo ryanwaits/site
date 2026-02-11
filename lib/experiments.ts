@@ -27,6 +27,6 @@ export const EXPERIMENTS: Experiment[] = [
 ];
 
 export const COMING_SOON: ComingSoon[] = [
-  { name: 'doccov', description: 'Documentation coverage analysis' },
-  { name: 'openpkg', description: 'TypeScript API extraction' },
+  { name: 'drift', description: 'Documentation coverage and drift detection' },
+  { name: 'openpkg-ts', description: 'TypeScript API extraction' },
 ];

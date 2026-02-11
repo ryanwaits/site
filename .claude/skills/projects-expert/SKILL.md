@@ -216,189 +216,107 @@ export const apiSource = loader({
 
 ---
 
-## doccov
+## drift
 
-Documentation coverage and drift detection for TypeScript.
+> Your code changed. Your docs didn't.
 
-### Install
+Detect documentation drift in TypeScript projects. 21 commands that catch when JSDoc, examples, and markdown fall out of sync with your actual API.
 
-```bash
-npm install -g @doccov/cli
+GitHub: https://github.com/ryanwaits/drift
+
+### Architecture
+
+```
+Layer 0: @openpkg-ts/spec   (open standard)
+Layer 1: @driftdev/sdk       (detection engine)
+Layer 2: drift CLI           (21 commands)
 ```
 
-### CLI Commands
+### Commands
 
-```bash
-# Generate spec (outputs to .doccov/{package}/)
-doccov spec
+**Composed (Human Surface):** `scan`, `health`, `ci`
+**Analysis (Agent Primitives):** `coverage`, `lint`, `examples`
+**Extraction:** `extract`, `list`, `get`
+**Comparison:** `diff`, `breaking`, `semver`, `changelog`
+**Plumbing:** `report`, `release`, `context`, `init`, `config`, `cache`
 
-# Check coverage (fail if below threshold)
-doccov check --min-coverage 80
+### Drift Types
 
-# Auto-fix drift issues
-doccov check --fix
-```
+15 types across 4 categories:
+- **structural** (7) — JSDoc types/params don't match code signature
+- **semantic** (3) — deprecation, visibility, broken `{@link}` references
+- **example** (4) — @example code has errors or doesn't work
+- **prose** (1) — markdown docs import/reference non-existent exports
 
-### Badges
+### Philosophy
 
-Add a documentation health badge to your README:
+- Two surfaces, one engine — composed commands for humans, primitives for agents
+- Every primitive is individually addressable — `scan` is a convenience, not a gate
+- Detection is the tool's job. Mutation is the agent's job.
+- All commands output `{ok, data, meta}` JSON to stdout with `filePath` + `line`
 
-```markdown
-![Docs](https://api.doccov.com/badge/YOUR_ORG/YOUR_REPO?path=.doccov/your-package/doccov.json)
-```
+### Claude Code Skill
 
-For scoped packages:
-```markdown
-![Docs](https://api.doccov.com/badge/YOUR_ORG/YOUR_REPO?path=.doccov/@your-org/pkg/doccov.json)
-```
-
-Requires `.doccov/{package}/doccov.json` committed to your default branch.
-
-### Packages
-
-| Package | Purpose |
-|---------|---------|
-| @doccov/spec | DocCov spec schema, validation |
-| @doccov/sdk | Core SDK |
-| @doccov/cli | CLI tool |
-
-### Dependencies
-
-Uses openpkg-ts under the hood for TypeScript extraction.
-
-### Use Cases
-
-- Enforce documentation coverage in CI
-- Track documentation drift over time
-- Display health badges on repos
+Ships as `/drift`. Install the skill, then use inside any TypeScript project:
+`/drift`, `/drift fix`, `/drift enrich`, `/drift review`, `/drift release`, `/drift docs/`
 
 ---
 
 ## secondlayer
 
-Type-safe contract interfaces, functions, and React hooks for Clarity smart contracts.
+Developer infrastructure for Stacks. Full blockchain toolkit — 10 packages.
 
-### Install
+GitHub: https://github.com/ryanwaits/secondlayer
+
+### Architecture
+
+```
+@secondlayer/stacks        viem-style typed client (public, wallet, multisig)
+@secondlayer/indexer        event indexer (reorg detection, gap backfill)
+@secondlayer/views          SQL views on indexed chain data (define, deploy, diff, reindex)
+@secondlayer/cli            contract codegen (Clarity → TypeScript)
+@secondlayer/sdk            streams query client
+@secondlayer/clarity-docs   Clarity documentation standard
+@secondlayer/shared         DB (Kysely + Postgres), queues, logging, crypto
+@secondlayer/api            Hono REST layer
+@secondlayer/auth           auth middleware
+@secondlayer/worker         background job processing
+```
+
+### @secondlayer/stacks
+
+Viem-style client for Stacks. Public, wallet, and multisig clients with composable actions. HTTP, WebSocket, and fallback transports. Local and provider accounts. Chain definitions (mainnet, testnet, devnet). BNS, PoX, StackingDAO, subscriptions, address validation, STX formatting.
+
+### @secondlayer/indexer
+
+Consumes Stacks node events via HTTP. Parses blocks, transactions, contract events. Detects reorganizations, validates parent hashes, auto-backfills gaps. Enqueues jobs for active streams. Health endpoints for queue status.
+
+### @secondlayer/views
+
+Define SQL views on indexed blockchain data. `defineView`, `validateViewDefinition`, `generateViewSQL`, `deploySchema`, `diffSchema`, `reindexView`. PostgreSQL-backed.
+
+### @secondlayer/cli — Contract Codegen
 
 ```bash
 bun add -g @secondlayer/cli
+secondlayer generate SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.alex-vault
 ```
 
-### CLI Commands
-
-```bash
-# Generate from local .clar files
-secondlayer generate ./contracts/token.clar -o ./src/generated.ts
-
-# Generate from deployed contracts (network inferred from address)
-secondlayer generate SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.alex-vault -o ./src/generated.ts
-
-# Glob patterns
-secondlayer generate "./contracts/*.clar" -o ./src/generated.ts
-
-# With config file
-secondlayer init   # creates secondlayer.config.ts
-secondlayer generate
-```
-
-### Config File
+Config-driven with plugins: `clarinet()`, `actions()`, `react()`, `testing()`. Network inferred from address: `SP`/`SM` → mainnet, `ST`/`SN` → testnet.
 
 ```typescript
-// secondlayer.config.ts
-import { defineConfig } from '@secondlayer/cli'
-import { clarinet, actions, react } from '@secondlayer/cli/plugins'
-
-export default defineConfig({
-  out: 'src/generated.ts',
-  plugins: [
-    clarinet(),  // parse local Clarinet project
-    actions(),   // add read/write helpers
-    react(),     // generate React hooks
-  ],
-})
-```
-
-### Generated Usage
-
-#### Contract Calls
-
-```typescript
-import { token } from './generated/contracts'
-import { makeContractCall, fetchCallReadOnlyFunction } from '@stacks/transactions'
-
-// Works with @stacks/transactions directly
-await makeContractCall({
-  ...token.transfer({ amount: 100n, recipient: "SP..." }),
-  network: 'mainnet',
-})
-
-await fetchCallReadOnlyFunction({
-  ...token.getBalance({ account: "SP..." }),
-  network: 'mainnet',
-})
-```
-
-#### Read/Write Helpers (requires actions plugin)
-
-```typescript
-// Read-only
+// Generated usage
 const balance = await token.read.getBalance({ account: "SP..." })
-
-// Write (uses STX_SENDER_KEY env var)
 await token.write.transfer({ amount: 100n, recipient: "SP..." })
-
-// Or pass senderKey explicitly
-await token.write.transfer({ amount: 100n, recipient: "SP..." }, "<sender-key>")
+await token.maps.balances.get("SP...")
+await token.vars.totalSupply.get()
 ```
-
-#### Contract State
-
-```typescript
-// Maps
-const balance = await token.maps.balances.get("SP...")
-
-// Variables
-const supply = await token.vars.totalSupply.get()
-
-// Constants
-const max = await token.constants.maxSupply.get()
-```
-
-#### React Hooks (requires react plugin)
-
-```typescript
-import { useTokenTransfer, useTokenBalances } from './generated/hooks'
-
-function App() {
-  const { transfer, isRequestPending } = useTokenTransfer()
-  const { data: balance } = useTokenBalances("SP...")
-
-  return (
-    <button onClick={() => transfer({ amount: 100n, recipient: "SP..." })}>
-      Transfer
-    </button>
-  )
-}
-```
-
-### Plugins
-
-| Plugin | Description |
-|--------|-------------|
-| clarinet() | Parse local Clarinet project |
-| actions() | Add `read`/`write` helpers |
-| react() | Generate React hooks |
-| testing() | Generate Clarinet SDK test helpers |
-
-### Network Inference
-
-Address prefix determines network:
-- `SP`/`SM` → mainnet
-- `ST`/`SN` → testnet
 
 ### Use Cases
 
-- Type-safe Clarity contract interactions
-- Generate React hooks for dApps
+- Typed Stacks client (like viem for Ethereum)
+- Index Stacks events with reorg safety
+- Define SQL views on chain data
+- Generate type-safe contract bindings
+- React hooks for dApps
 - Testing with Clarinet SDK
-- Direct integration with @stacks/transactions

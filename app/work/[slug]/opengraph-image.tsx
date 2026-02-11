@@ -29,7 +29,7 @@ export default async function OG({ params }: { params: Promise<{ slug: string }>
   ]);
 
   // Different visual for each project
-  if (slug === 'doccov') {
+  if (slug === 'drift') {
     return new ImageResponse(
       (
         <div

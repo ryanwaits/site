@@ -10,8 +10,10 @@ Shaped Bitcoin developer infrastructure. Rearchitected docs across 12+ packages 
 
 ## Current Projects
 
-**[openpkg](https://github.com/ryanwaits/openpkg)** — Extracts public API from any TypeScript package. JSON Schema out. Wanted OpenAPI for packages, didn't exist, so built it.
+**[openpkg-ts](https://github.com/ryanwaits/openpkg-ts)** — Extracts public API from any TypeScript package. JSON Schema out. Wanted OpenAPI for packages, didn't exist, so built it.
 
-**[doccov](https://github.com/ryanwaits/doccov)** — Documentation coverage. Started as 2000 lines of TypeScript, now 100 lines of prompts. Deleted 95% of the code. Tool got better.
+**[drift](https://github.com/ryanwaits/drift)** — Your code changed. Your docs didn't. 21 commands that catch when JSDoc, examples, and markdown fall out of sync with your actual API.
+
+**[secondlayer](https://github.com/ryanwaits/secondlayer)** — Developer infrastructure for Stacks. Typed client, event indexer, SQL views on chain data, contract codegen. 10 packages.
 
 IMPORTANT: Output URLs as markdown links. Be direct, skip formalities.

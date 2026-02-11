@@ -27,11 +27,11 @@ Thinking about what software design means when agents are the user. Should we be
 
 Still figuring it out. Building things to learn:
 
-**[openpkg](https://github.com/ryanwaits/openpkg)** — Extracts the public API from any TypeScript package. JSON Schema out. One command. I wanted OpenAPI for packages — turns out it didn't exist, so I built it.
+**[openpkg-ts](https://github.com/ryanwaits/openpkg-ts)** — Extracts the public API from any TypeScript package. JSON Schema out. One command. I wanted OpenAPI for packages — turns out it didn't exist, so I built it.
 
-**[doccov](https://github.com/ryanwaits/doccov)** — Documentation coverage tool built on openpkg.
+**[drift](https://github.com/ryanwaits/drift)** — Your code changed. Your docs didn't. 21 commands that catch when JSDoc, examples, and markdown fall out of sync with your actual API.
 
-**[secondlayer](https://github.com/ryanwaits/secondlayer)** — Type-safe TypeScript from Clarity contracts. Point at a contract, get interfaces, helpers, React hooks. No manual type definitions.
+**[secondlayer](https://github.com/ryanwaits/secondlayer)** — Developer infrastructure for Stacks. Typed client, event indexer, SQL views on chain data, contract codegen. 10 packages.
 
 ---
 
@@ -51,7 +51,7 @@ I prototype in code. Mockups are fine but I'd rather build the thing and feel it
 
 I obsess over small details — error messages, progress feedback, what information shows when. Developer tools should feel fast and unsurprising.
 
-I delete more than I add. If I can remove a feature and the tool gets simpler without getting worse, I remove it.
+I delete more than I add.
 
 ---
 

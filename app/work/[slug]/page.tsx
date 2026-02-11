@@ -25,116 +25,114 @@ const PROJECTS: Record<string, {
     }
   }>
 }> = {
-  doccov: {
-    name: 'doccov',
-    tagline: 'Codecov for documentation',
-    status: 'MVP',
-    github: 'https://github.com/ryanwaits/doccov',
+  drift: {
+    name: 'drift',
+    tagline: 'Your code changed. Your docs didn\'t.',
+    status: 'Stable',
+    github: 'https://github.com/ryanwaits/drift',
     sections: [
       {
         id: 'problem',
         title: 'The Problem',
-        content: `Code coverage has tooling. Documentation coverage? Nothing.
+        content: `Your code changed. Your docs didn't.
 
-You ship a library with 50 exports. How many are documented? Which ones are missing @param tags? Nobody knows until a user files an issue. I got tired of guessing.`,
+JSDoc says one param, function takes three. @example blocks reference APIs you removed last sprint. Markdown docs import exports that no longer exist. Nobody knows until a user files an issue.`,
         terminal: {
           output: [
-            '// your-package/index.ts',
-            '',
+            '/** @param x - the first number */',
             'export function calculate(x, y, opts) {',
-            '  // ... 200 lines of logic',
+            '  // JSDoc: 1 param. Code: 3 params.',
             '}',
             '',
-            'export function transform(input) {',
-            '  // ... complex transformation',
-            '}',
+            '/** @example',
+            ' * transform(input, { mode: "fast" })',
+            ' * // \'mode\' option was removed in v2',
+            ' */',
+            'export function transform(input) { }',
           ]
         }
       },
       {
         id: 'solution',
         title: 'The Solution',
-        content: `doccov scans your TypeScript package and calculates documentation coverage like code coverage.
+        content: `21 commands. Two surfaces, one engine — composed commands for humans, primitives for agents.
 
-Every exported function, class, type, and interface. Every parameter and return type. Measured and reported.`,
+15 drift types across 4 categories: structural (JSDoc vs code), semantic (deprecation, broken links), example (code errors), and prose (stale markdown references).`,
         terminal: {
-          command: 'npx doccov analyze ./src',
+          command: 'drift scan',
           typing: true,
           output: [
-            '$ npx doccov analyze ./src',
+            '$ drift scan',
             '',
-            '◐ Scanning exports...',
-            '◐ Parsing JSDoc comments...',
-            '◐ Calculating coverage...',
+            '◐ Extracting API spec...',
+            '◐ Checking coverage...',
+            '◐ Cross-referencing JSDoc vs code...',
+            '◐ Validating examples...',
+            '◐ Scanning prose for stale refs...',
           ]
         }
       },
       {
         id: 'output',
         title: 'The Output',
-        content: `Get a clear coverage report showing exactly what's documented and what's missing.
+        content: `All commands output {ok, data, meta} JSON to stdout. Every drift issue includes filePath and line — agents read the diagnosis, then edit code directly.
 
-Broken down by file. Broken down by export type. Actionable warnings for every gap.`,
+Detection is the tool's job. Mutation is the agent's job.`,
         terminal: {
           output: [
-            'DOCCOV COVERAGE REPORT',
+            'DRIFT SCAN',
             '',
-            'Overall:    ████████░░░░░░░░░░░░  42%',
+            'Coverage:   ████████░░░░░░░░░░░░  42%',
             '',
-            'Functions   ████████████░░░░░░░░  58%',
-            'Classes     ██████░░░░░░░░░░░░░░  31%',
-            'Types       ████████████████░░░░  78%',
-            'Interfaces  ████████░░░░░░░░░░░░  45%',
+            'structural  7 issues  (param mismatch, type drift)',
+            'semantic    3 issues  (broken @link, deprecation)',
+            'example     4 issues  (typecheck failures)',
+            'prose       1 issue   (stale markdown import)',
             '',
-            '⚠ 23 exports missing documentation',
-            '⚠ 12 functions missing @param',
-            '⚠ 8 functions missing @returns',
+            '15 drift issues found',
+            'Each with filePath + line for agent fixes',
           ]
         }
       },
       {
-        id: 'cicd',
-        title: 'CI/CD Integration',
-        content: `Add to your pipeline. Fail builds when coverage drops below threshold.
+        id: 'agent',
+        title: 'Agent Usage',
+        content: `Ships as a Claude Code skill. Install it, then /drift inside any TypeScript project. The CLI outputs structured JSON with location data — agents use it to fix your docs automatically.
 
-Same workflow as code coverage. Documentation becomes a first-class quality metric.`,
+Every primitive is individually addressable. scan is a convenience, not a gate.`,
         terminal: {
           output: [
-            'name: Documentation Coverage',
-            'on: [push, pull_request]',
+            '/drift              # status check, auto-init',
+            '/drift fix          # lint → fix JSDoc signatures',
+            '/drift enrich       # coverage → add missing JSDoc',
+            '/drift review       # PR documentation impact',
+            '/drift release      # pre-release audit',
+            '/drift docs/        # scan external docs for stale refs',
             '',
-            'jobs:',
-            '  coverage:',
-            '    runs-on: ubuntu-latest',
-            '    steps:',
-            '      - uses: actions/checkout@v4',
-            '      - run: npx doccov analyze ./src',
-            '      - run: npx doccov check --min 80',
-            '',
-            '# ✓ Fails if coverage < 80%',
+            '# Machine-readable command discovery',
+            '$ drift --capabilities',
           ]
         }
       },
       {
         id: 'install',
         title: 'Get Started',
-        content: `Zero config. Point at your source directory. Get a report.
-
-Started as 2000 lines of TypeScript. Now it's 100 lines of prompts. Deleted 95% of the code. The tool got better.`,
+        content: `Entry auto-detects from package.json. Just drift scan in any TypeScript project. Compose primitives in CI or let agents use them directly.`,
         terminal: {
-          command: 'npm install -g doccov',
+          command: 'drift scan',
           output: [
-            '$ npm install -g doccov',
-            '+ doccov@0.3.2',
+            '# Full scan',
+            '$ drift scan',
             '',
-            '$ doccov analyze ./src',
+            '# Or compose primitives',
+            '$ drift coverage --min 80',
+            '$ drift lint',
+            '$ drift examples',
             '',
-            '✓ Coverage report generated',
-            '✓ Found 50 exports',
-            '✓ 21 fully documented',
-            '✓ 29 need attention',
-            '',
-            '→ doccov-report.json',
+            '# CI (GitHub Actions)',
+            '- uses: driftdev/drift@v1',
+            '  with:',
+            '    min-coverage: 80',
           ]
         }
       }
@@ -142,19 +140,19 @@ Started as 2000 lines of TypeScript. Now it's 100 lines of prompts. Deleted 95% 
   },
   secondlayer: {
     name: 'secondlayer',
-    tagline: 'Type-safe Clarity contract interfaces',
+    tagline: 'Developer infrastructure for Stacks',
     status: 'Stable',
     github: 'https://github.com/ryanwaits/secondlayer',
     sections: [
       {
         id: 'problem',
         title: 'The Problem',
-        content: `Clarity contracts have no TypeScript integration. Manual type definitions drift. Call parameters are untyped strings.
+        content: `Stacks has no cohesive dev toolkit. Contract calls are untyped string bags. Want to index events? Build your own. Want to query chain state with SQL? Not a thing.
 
-You deploy a contract with 20 functions. Every call site in your app? Untyped. Every parameter? Hope you got the order right.`,
+You're gluing together 5 different libraries with no shared type system. Hope the types align.`,
         terminal: {
           output: [
-            '// Calling a Clarity contract today',
+            '// Stacks development today',
             '',
             'await contractCall({',
             '  contractAddress: "SP2...",',
@@ -166,106 +164,115 @@ You deploy a contract with 20 functions. Every call site in your app? Untyped. E
             '  ]',
             '})',
             '',
-            '// No autocomplete. No type errors.',
-            '// Find bugs in production.',
+            '// No autocomplete. No type safety.',
+            '// Indexing? Roll your own.',
           ]
         }
       },
       {
-        id: 'solution',
-        title: 'The Solution',
-        content: `secondlayer generates type-safe interfaces from contract source or deployed contracts.
+        id: 'stacks',
+        title: 'Stacks Client',
+        content: `@secondlayer/stacks — viem-style typed client for Stacks. Public, wallet, and multisig clients with composable actions. HTTP, WebSocket, and fallback transports. Local and provider accounts.
 
-Point at a contract address or local file. Auto-infers network from address prefix. Get TypeScript that knows your contract.`,
+Chain definitions for mainnet, testnet, devnet. Address validation, STX formatting, BNS, PoX, subscriptions.`,
         terminal: {
-          command: 'npx secondlayer generate SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait',
-          typing: true,
           output: [
-            '$ npx secondlayer generate SP2PABAF...nft-trait',
+            'import { createPublicClient, http } from',
+            '  "@secondlayer/stacks"',
             '',
-            '◐ Fetching contract from mainnet...',
-            '◐ Parsing Clarity source...',
-            '◐ Generating TypeScript interfaces...',
+            'const client = createPublicClient({',
+            '  chain: mainnet,',
+            '  transport: http(),',
+            '})',
+            '',
+            '// Typed actions',
+            'const block = await client.getBlock()',
+            'const info = await client.getInfo()',
+            '',
+            '// WebSocket subscriptions',
+            '// Wallet + multisig clients',
+            '// BNS, PoX, StackingDAO',
           ]
         }
       },
       {
-        id: 'output',
-        title: 'The Output',
-        content: `Generated interfaces match your contract exactly. Helper functions for read/write calls. Type-safe parameters — wrong types don't compile.
+        id: 'indexer',
+        title: 'Indexer & Views',
+        content: `@secondlayer/indexer consumes Stacks node events. Parses blocks, transactions, contract events. Detects reorganizations, validates parent hashes, auto-backfills gaps.
 
-Every public function. Every argument. Every return type.`,
+@secondlayer/views lets you define SQL views on indexed chain data. Define a schema, deploy it, query it.`,
         terminal: {
           output: [
-            '// Generated: nft-trait.ts',
+            '// Define a view on indexed data',
+            'import { defineView } from "@secondlayer/views"',
             '',
-            'export interface NftTrait {',
-            '  getLastTokenId(): Promise<Response<uint, never>>;',
-            '  getTokenUri(tokenId: uint): Promise<Response<string, uint>>;',
-            '  getOwner(tokenId: uint): Promise<Response<principal, uint>>;',
-            '  transfer(',
-            '    tokenId: uint,',
-            '    sender: principal,',
-            '    recipient: principal',
-            '  ): Promise<Response<boolean, uint>>;',
-            '}',
+            'const tokenTransfers = defineView({',
+            '  name: "token_transfers",',
+            '  columns: {',
+            '    sender: { type: "text" },',
+            '    amount: { type: "numeric" },',
+            '    block:  { type: "integer" },',
+            '  },',
+            '})',
             '',
-            '// Now TypeScript catches the bugs.',
+            '// Deploy, diff, reindex',
+            'await deploySchema(schema)',
+            'await diffSchema(old, new)',
           ]
         }
       },
       {
-        id: 'plugins',
-        title: 'Plugins',
-        content: `Extend generation with plugins. clarinet() reads from Clarinet projects. react() generates hooks. testing() adds mock helpers.
+        id: 'codegen',
+        title: 'Contract Codegen',
+        content: `@secondlayer/cli generates type-safe interfaces from Clarity contracts. Point at a local file or deployed contract — network inferred from address prefix.
 
-Pick what you need. Skip what you don't.`,
+Config-driven with plugins: clarinet(), actions(), react(), testing().`,
         terminal: {
           output: [
-            '// secondlayer.config.ts',
+            '// Read-only',
+            'const balance = await token.read.getBalance({',
+            '  account: "SP..."',
+            '})',
             '',
-            'import { defineConfig } from "secondlayer";',
-            'import { clarinet } from "secondlayer/plugins";',
-            'import { react } from "secondlayer/plugins";',
+            '// Write',
+            'await token.write.transfer({',
+            '  amount: 100n, recipient: "SP..."',
+            '})',
             '',
-            'export default defineConfig({',
-            '  plugins: [',
-            '    clarinet(),      // read from Clarinet.toml',
-            '    react(),         // generate useContract hooks',
-            '  ],',
-            '  outDir: "./generated"',
-            '});',
+            '// Contract state',
+            'await token.maps.balances.get("SP...")',
+            'await token.vars.totalSupply.get()',
+            'await token.constants.maxSupply.get()',
           ]
         }
       },
       {
-        id: 'install',
-        title: 'Get Started',
-        content: `Install. Run. Get types. Zero config for basic usage — just point at a contract address and go.`,
+        id: 'packages',
+        title: '10 Packages',
+        content: `Everything published under @secondlayer. Use what you need — the stacks client, the indexer, the codegen CLI, or the full stack.`,
         terminal: {
-          command: 'npm install secondlayer',
           output: [
-            '$ npm install secondlayer',
-            '+ secondlayer@0.5.0',
-            '',
-            '$ npx secondlayer generate SP2...my-contract',
-            '',
-            '✓ Generated my-contract.ts',
-            '✓ 12 functions typed',
-            '✓ 4 read-only functions',
-            '✓ 8 public functions',
-            '',
-            '→ ./generated/my-contract.ts',
+            'packages/',
+            '  stacks/        # viem-style typed client',
+            '  indexer/        # event indexer + reorg detection',
+            '  views/          # SQL views on chain data',
+            '  cli/            # contract codegen',
+            '  sdk/            # streams query client',
+            '  clarity-docs/   # Clarity doc standard',
+            '  shared/         # DB, queues, logging',
+            '  api/            # Hono REST layer',
+            '  auth/           # auth middleware',
+            '  worker/         # background processing',
           ]
         }
       }
     ]
   },
-  openpkg: {
-    name: 'openpkg',
+  'openpkg-ts': {
+    name: 'openpkg-ts',
     tagline: 'OpenAPI for TypeScript packages',
     status: 'Stable',
-    github: 'https://github.com/ryanwaits/openpkg',
+    github: 'https://github.com/ryanwaits/openpkg-ts',
     sections: [
       {
         id: 'problem',
@@ -295,10 +302,10 @@ You want to know what a package exports? Read the source. Grep through node_modu
 
 Functions, types, interfaces, classes. Parameters, return types, generics. JSON Schema out — ready for agents, tooling, whatever needs to understand your API.`,
         terminal: {
-          command: 'npx openpkg extract lodash',
+          command: 'npx @openpkg-ts/cli snapshot src/index.ts',
           typing: true,
           output: [
-            '$ npx openpkg extract lodash',
+            '$ npx @openpkg-ts/cli snapshot src/index.ts',
             '',
             '◐ Resolving package...',
             '◐ Loading type definitions...',
@@ -338,18 +345,17 @@ Feed it to an LLM. Generate documentation. Build type-safe wrappers.`,
 The whole point: agents need to understand your API surface in one pass. Not skim docs. Not grep source. Just structured JSON they can reason about.`,
         terminal: {
           output: [
-            '// Feed to Claude for code generation',
-            '$ openpkg extract zod > zod-api.json',
-            '$ cat prompt.txt zod-api.json | claude',
+            '// Extract full spec',
+            '$ openpkg snapshot src/index.ts -o openpkg.json',
             '',
-            '// Generate documentation',
-            '$ openpkg extract ./src | docs-gen',
-            '',
-            '// Type-safe wrapper generation',
-            '$ openpkg extract stripe | wrap-gen --lang python',
+            '// Generate docs from spec',
+            '$ openpkg docs openpkg.json -o api.md',
             '',
             '// Diff between versions',
-            '$ openpkg diff lodash@4.17.20 lodash@4.17.21',
+            '$ openpkg diff old.json new.json --summary',
+            '',
+            '// Pipeline',
+            '$ openpkg snapshot src/index.ts -o - | openpkg docs -',
           ]
         }
       },
@@ -358,19 +364,19 @@ The whole point: agents need to understand your API surface in one pass. Not ski
         title: 'Get Started',
         content: `Point at any package. Local path or npm registry. One command, JSON Schema out. No config, no setup, just the API surface.`,
         terminal: {
-          command: 'npm install -g openpkg',
+          command: 'npm install -g @openpkg-ts/cli',
           output: [
-            '$ npm install -g openpkg',
-            '+ openpkg@1.2.0',
+            '$ npm install -g @openpkg-ts/cli',
+            '+ @openpkg-ts/cli@1.0.0',
             '',
-            '$ openpkg extract react',
+            '$ openpkg snapshot src/index.ts',
             '',
             '✓ Extracted 156 exports',
             '✓ 89 functions',
             '✓ 34 types',
             '✓ 33 interfaces',
             '',
-            '→ react-api.json (47kb)',
+            '→ openpkg.json (47kb)',
           ]
         }
       }
@@ -379,7 +385,7 @@ The whole point: agents need to understand your API surface in one pass. Not ski
 }
 
 // Order of projects for navigation (matches lib/projects.ts)
-const PROJECT_ORDER = ['openpkg', 'doccov', 'secondlayer']
+const PROJECT_ORDER = ['openpkg-ts', 'drift', 'secondlayer']
 
 // Terminal component with typing animation and syntax highlighting
 function Terminal({ data, isActive }: {

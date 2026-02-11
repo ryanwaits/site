@@ -7,7 +7,7 @@ import { TerminalFrame } from '../../components/terminal-frame'
 const FLUX_DATA = {
   focus: "Career transition",
   focusDetail: "Evaluating: Anthropic, Gauntlet, Indie",
-  activeProjects: ["site", "doccov", "openpkg"],
+  activeProjects: ["site", "drift", "openpkg-ts"],
   todaySessions: 3,
   recentActivity: [
     { time: "09:41", project: "site", action: "session started" },

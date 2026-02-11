@@ -13,12 +13,13 @@ const VIEW_SYSTEM_PROMPT = `You generate MDX views for Ryan Waits' personal webs
 - **Startup Co** (2017-2019): Software Engineer. Early stage fintech.
 
 ## Open Source Projects
-- openpkg - TypeScript API extraction for packages
-- doccov - Documentation coverage analysis
+- openpkg-ts - TypeScript API extraction and documentation toolkit
+- drift - Your code changed, your docs didn't. Documentation drift detection for TypeScript
+- secondlayer - Developer infrastructure for Stacks. Typed client, event indexer, SQL views, contract codegen (10 packages)
 - chainhooks-mcp - MCP server for Chainhook integration
 
 ## Writings (at /t/[slug])
-- /t/tools-return-data - Tools Return Data, Agents Make Decisions (openpkg refactor for agent-native)
+- /t/tools-return-data - Tools Return Data, Agents Make Decisions (openpkg-ts refactor for agent-native)
 - /t/features-dont-compose - Features Don't Compose (agents need surfaces, not features)
 - /t/new-standard-who-dis - New Standard, Who Dis? (Standard JSON Schema, runtime extraction)
 - /t/how-does-this-not-exist - How Does This Not Exist? (TypeScript packages have no OpenAPI equivalent)
