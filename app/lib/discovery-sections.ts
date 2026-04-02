@@ -33,7 +33,7 @@ export const DISCOVERY_SECTIONS: Section[] = [
     label: "Tools & Software",
     questions: [
       "What apps and software do you use for work? Include stuff you barely use — that's useful info too. Rough monthly costs if you know them.",
-      "Do any of those tools give you reports or dashboards — like email open rates, lead stats, website analytics? Even if you don't look at them much.",
+      "Do any of those tools give you reports or let you export data — like lead history, email stats, sales numbers, appointment records? Even if you've never pulled them.",
     ],
   },
   {
@@ -65,7 +65,7 @@ export const DISCOVERY_SECTIONS: Section[] = [
     label: "Practical Details",
     questions: [
       "Roughly what are you spending per month on tools and software? Have you worked with a consultant or coach before — how'd that go?",
-      "How comfortable are you with tech — if someone set up AI tools for you and showed you how to use them, would you be good running them day-to-day?",
+      "How comfortable are you with tech — if someone built AI tools for you and showed you how to use them, would you be good running them day-to-day?",
     ],
   },
 ];
