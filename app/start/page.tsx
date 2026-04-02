@@ -8,7 +8,7 @@ interface Message {
   content: string;
 }
 
-export default function DiscoverPage() {
+export default function StartPage() {
   const [started, setStarted] = useState(false);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");

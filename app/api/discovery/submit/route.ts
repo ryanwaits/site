@@ -65,7 +65,7 @@ function buildEmailHtml(
       </div>
       ${sectionsHtml}
       <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;color:#999;font-size:12px;">
-        Submitted via ryanwaits.com/discover
+        Submitted via ryanwaits.com/start
       </div>
     </body>
     </html>`;
