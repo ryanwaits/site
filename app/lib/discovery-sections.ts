@@ -33,8 +33,7 @@ export const DISCOVERY_SECTIONS: Section[] = [
     label: "Tools & Software",
     questions: [
       "What apps and software do you use for work? Include stuff you barely use — that's useful info too. Rough monthly costs if you know them.",
-      "For the main ones — like your CRM, email platform, scheduling tool — do you have admin access? Could you grant access to someone else if needed?",
-      "Do any of your tools give you dashboards or reports? Like email open rates, lead conversion numbers, website analytics?",
+      "Do any of those tools give you reports or dashboards — like email open rates, lead stats, website analytics? Even if you don't look at them much.",
     ],
   },
   {
@@ -42,8 +41,7 @@ export const DISCOVERY_SECTIONS: Section[] = [
     label: "Leads & Clients",
     questions: [
       "Where do most of your leads come from? When a new one comes in, what happens — how fast do you respond, what's the follow-up process?",
-      "Roughly how many new leads or inquiries do you get per week or month?",
-      "After a deal or project is done, do you have a system for staying in touch or getting referrals?",
+      "Roughly how many new leads or inquiries come in per week? And after a deal is done, do you have a system for staying in touch or getting referrals?",
     ],
   },
   {
@@ -58,7 +56,7 @@ export const DISCOVERY_SECTIONS: Section[] = [
     label: "Pain Points & Goals",
     questions: [
       "If you could clone yourself for one task, what would that clone do? What's the thing you keep saying you'll get to but never do?",
-      "If there was ONE number in your business you could improve — like response time, close rate, customer retention — what would it be?",
+      "If there was ONE number in your business you could improve — response time, close rate, retention, whatever — what would it be?",
       "Where do you want your business to be in 6-12 months? What's the #1 thing holding you back?",
     ],
   },
@@ -66,8 +64,8 @@ export const DISCOVERY_SECTIONS: Section[] = [
     id: "practical",
     label: "Practical Details",
     questions: [
-      "Roughly what are you spending per month on tools and software? Have you worked with a consultant before — how'd that go?",
-      "Would you be comfortable giving us access to your main tools — like your CRM, email platform, or social accounts — so we can set up and run automations for you?",
+      "Roughly what are you spending per month on tools and software? Have you worked with a consultant or coach before — how'd that go?",
+      "How comfortable are you with tech — if someone set up AI tools for you and showed you how to use them, would you be good running them day-to-day?",
     ],
   },
 ];
