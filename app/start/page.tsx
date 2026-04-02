@@ -223,7 +223,7 @@ export default function StartPage() {
         <div className="max-w-lg w-full space-y-8">
           <div className="space-y-3">
             <h1 className="text-4xl tracking-tight" style={{ fontFamily: "var(--font-family-serif)" }}>
-              AI Workflow Assessment
+              Workflow Assessment
             </h1>
             <p className="text-[var(--color-muted)] text-lg leading-relaxed">
               Answer a few questions about your business and I'll put together a
