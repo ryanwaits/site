@@ -252,7 +252,7 @@ export default function StartPage() {
                       ?.focus();
                   }
                 }}
-                placeholder="e.g. Sarah Mitchell"
+                placeholder="e.g. Harper"
                 className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
                 autoFocus
               />
@@ -266,7 +266,7 @@ export default function StartPage() {
                 value={clientEmail}
                 onChange={(e) => setClientEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && startDiscovery()}
-                placeholder="sarah@company.com"
+                placeholder="harper@company.com"
                 className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
               />
             </div>
