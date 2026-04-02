@@ -27,6 +27,12 @@ export default function DiscoverPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
+  const [speechSupported, setSpeechSupported] = useState(false);
+
+  useEffect(() => {
+    const w = window as any;
+    setSpeechSupported(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
+  }, []);
 
   const currentSection = DISCOVERY_SECTIONS[sectionIndex];
   const isComplete = sectionIndex >= DISCOVERY_SECTIONS.length;
@@ -224,8 +230,9 @@ export default function DiscoverPage() {
               breakdown of where AI can help — prioritized by impact.
             </p>
             <p className="text-[var(--color-muted)] text-sm">
-              Takes about 15-20 minutes. You can type or use voice. Just be
-              honest about what's messy — that's where the opportunities are.
+              Takes about 15-20 minutes. Think about the stuff you wish you
+              could just hand off — the things you'd tell an assistant to handle
+              if you had one around the corner.
             </p>
           </div>
           <div className="space-y-4">
@@ -367,30 +374,32 @@ export default function DiscoverPage() {
       {!isComplete && (
         <div className="sticky bottom-0 bg-[var(--color-bg)] border-t border-[var(--color-border)] px-4 py-3">
           <div className="flex items-end gap-2">
-            <button
-              onClick={toggleRecording}
-              className={`shrink-0 p-3 rounded-full transition-colors cursor-pointer ${
-                isRecording
-                  ? "bg-red-500 text-white animate-pulse"
-                  : "bg-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-text)]"
-              }`}
-              title={isRecording ? "Stop recording" : "Start voice input"}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {speechSupported && (
+              <button
+                onClick={toggleRecording}
+                className={`shrink-0 p-3 rounded-full transition-colors cursor-pointer ${
+                  isRecording
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                }`}
+                title={isRecording ? "Stop recording" : "Start voice input"}
               >
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" x2="12" y1="19" y2="22" />
-              </svg>
-            </button>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" x2="12" y1="19" y2="22" />
+                </svg>
+              </button>
+            )}
             <textarea
               ref={inputRef}
               value={input}
